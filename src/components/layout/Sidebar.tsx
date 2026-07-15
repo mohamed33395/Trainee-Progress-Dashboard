@@ -1,4 +1,5 @@
-import { Link, useLocation } from 'react-router-dom'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { 
   LayoutDashboard, 
   Users, 
@@ -20,7 +21,7 @@ import { useLanguage } from '@/context/LanguageContext'
 import { useAuth } from '@/context/AuthContext'
 
 export function Sidebar() {
-  const location = useLocation()
+  const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const { language, setLanguage, dir, t } = useLanguage()
   const { isTrainee, isTeamLeader, isAdmin, user } = useAuth()
@@ -93,13 +94,13 @@ export function Sidebar() {
         {/* Navigation */}
         <nav className="flex-1 space-y-1 p-2">
           {filteredNavigation.map((item) => {
-            const isActive = location.pathname === item.href
+            const isActive = pathname === item.href
             const Icon = item.icon
             
             return (
               <Link
                 key={item.name}
-                to={item.href}
+                href={item.href}
                 className={cn(
                   'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
                   isActive
