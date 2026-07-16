@@ -10,7 +10,7 @@ export default function StudentDetailsPage() {
   const { trainees, reports } = useApp()
   const params = useParams()
 
-  if (!params?.id) {
+  if (!params) {
     return <div>Loading...</div>
   }
 

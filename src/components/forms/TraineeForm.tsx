@@ -18,6 +18,7 @@ const traineeSchema = z.object({
   status: z.enum(['active', 'completed', 'on-hold', 'dropped']),
   startDate: z.string().min(1, 'Start date is required'),
   currentWeek: z.number().min(1, 'Week must be at least 1'),
+  languageLevel: z.string().optional(),
 })
 
 type TraineeFormData = z.infer<typeof traineeSchema>
@@ -92,6 +93,7 @@ export function TraineeForm({ isOpen, onClose, onSubmit, trainee, teachers = [] 
       reports: trainee?.reports || [],
       skillsProgress: selectedSkills,
       assignedCoach: selectedTeacher,
+      languageLevel: (data.languageLevel || 'Intermediate') as 'Beginner' | 'Elementary' | 'Intermediate' | 'Upper-Intermediate' | 'Advanced' | 'Proficient',
     }
     onSubmit(traineeData)
     onClose()

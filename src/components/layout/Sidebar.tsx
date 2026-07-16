@@ -129,8 +129,7 @@ export function Sidebar() {
                 <p className="text-xs text-slate-400 truncate">
                   {user.role === 'admin' ? t.common.admin : 
                    user.role === 'team_leader' ? t.common.teamLeader : 
-                   user.role === 'trainee' ? t.common.trainee : 
-                   user.role.replace('_', ' ').toUpperCase()}
+                   t.common.trainee}
                 </p>
               </div>
             </div>
