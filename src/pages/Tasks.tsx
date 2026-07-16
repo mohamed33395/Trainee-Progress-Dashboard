@@ -211,6 +211,7 @@ export function Tasks({ currentTraineeId }: TasksProps) {
                 <div key={task.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={task.imageUrl}
                         alt={task.title}
@@ -278,6 +279,7 @@ export function Tasks({ currentTraineeId }: TasksProps) {
                       <h4 className="font-medium mb-2">{t.tasks.submissionDetails}</h4>
                       <div className="grid grid-cols-2 gap-4 mb-2">
                         <div>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={task.submission.codeSnippetImage}
                             alt="Code Snippet"
@@ -286,6 +288,7 @@ export function Tasks({ currentTraineeId }: TasksProps) {
                           <p className="text-xs text-muted-foreground mt-1">{t.tasks.codeSnippetImage}</p>
                         </div>
                         <div>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={task.submission.projectImage}
                             alt="Project"
@@ -389,6 +392,7 @@ export function Tasks({ currentTraineeId }: TasksProps) {
               <div className="flex items-center gap-4">
                 {taskImage ? (
                   <div className="relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={taskImage}
                       alt="Task preview"
@@ -443,6 +447,7 @@ export function Tasks({ currentTraineeId }: TasksProps) {
               <div className="flex items-center gap-4">
                 {submissionData.codeSnippetImage ? (
                   <div className="relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={submissionData.codeSnippetImage}
                       alt="Code snippet preview"
@@ -479,6 +484,7 @@ export function Tasks({ currentTraineeId }: TasksProps) {
               <div className="flex items-center gap-4">
                 {submissionData.projectImage ? (
                   <div className="relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={submissionData.projectImage}
                       alt="Project preview"
