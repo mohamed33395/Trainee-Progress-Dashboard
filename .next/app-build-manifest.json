@@ -21,20 +21,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/teachers/page.js"
     ],
-    "/tasks/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/tasks/page.js"
-    ],
     "/daily-report/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/daily-report/page.js"
-    ],
-    "/analytics/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/analytics/page.js"
     ],
     "/student-reports/page": [
       "static/chunks/webpack.js",
@@ -46,10 +36,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/user-management/page.js"
     ],
-    "/settings/page": [
+    "/tasks/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/settings/page.js"
+      "static/chunks/app/tasks/page.js"
     ]
   }
 }

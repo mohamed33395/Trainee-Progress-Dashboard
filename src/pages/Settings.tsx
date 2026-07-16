@@ -211,7 +211,7 @@ export function Settings() {
                 <Label>Data Privacy</Label>
                 <p className="text-sm text-muted-foreground">
                   Your data never leaves your device. All information is stored locally
-                  in your browser&apos;s Local Storage and is not transmitted to any external servers.
+                  in your browser and is not transmitted to any external servers.
                 </p>
               </div>
             </CardContent>
