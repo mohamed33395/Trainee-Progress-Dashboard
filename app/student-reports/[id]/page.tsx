@@ -9,12 +9,7 @@ import { useParams } from 'next/navigation'
 export default function StudentReportDetailPage() {
   const { trainees, reports } = useApp()
   const params = useParams()
-
-  if (!params) {
-    return <div>Loading...</div>
-  }
-
-  const id = params.id as string
+  const id = params?.id as string
 
   return (
     <div className="flex min-h-screen bg-background">
