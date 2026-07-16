@@ -1,3 +1,4 @@
+"use client"
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { Trainee, DailyReport, Teacher, LanguageLevel, Task, User, Notification } from '../types'
 import { storageService } from '../services/storage'
@@ -56,25 +57,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
           // Initialize Firestore
           try {
             await firestoreStorageService.initializeData()
-            const isEmpty = await firestoreStorageService.isEmpty()
-            
-            if (isEmpty) {
-              // Don't load mock data automatically - start with empty data
-              setTrainees([])
-              setReports([])
-              setTeachers([])
-              setTasks([])
-              setUsers([])
-              setNotifications([])
-            } else {
-              const data = await firestoreStorageService.getAllData()
-              setTrainees(data.trainees || [])
-              setReports(data.reports || [])
-              setTeachers(data.teachers || [])
-              setTasks(data.tasks || [])
-              setUsers(data.users || [])
-              setNotifications(data.notifications || [])
-            }
+            // Always load existing data from Firebase - never overwrite
+            const data = await firestoreStorageService.getAllData()
+            setTrainees(data.trainees || [])
+            setReports(data.reports || [])
+            setTeachers(data.teachers || [])
+            setTasks(data.tasks || [])
+            setUsers(data.users || [])
+            setNotifications(data.notifications || [])
           } catch (firestoreError) {
             console.error('Firestore initialization failed, falling back to localStorage:', firestoreError)
             // Fallback to localStorage if Firestore fails
