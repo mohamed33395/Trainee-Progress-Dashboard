@@ -1,3 +1,4 @@
+"use client"
 import { Bell, Search, User, Moon, Sun, LogOut, X, Globe } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

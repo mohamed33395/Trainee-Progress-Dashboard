@@ -1,3 +1,4 @@
+"use client"
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { User, UserRole } from '../types'
 import { storageService } from '../services/storage'
@@ -46,6 +47,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const initializeDefaultUsers = async () => {
     const users = useFirestore ? await firestoreStorageService.getUsers() : storageService.getUsers()
+    
+    // Only create default users if no users exist at all
     if (users.length === 0) {
       // Create default admin user
       const adminUser: User = {
@@ -75,6 +78,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await firestoreStorageService.addUser(teamLeaderUser)
       } else {
         storageService.addUser(teamLeaderUser)
+      }
+    } else {
+      // If users exist, ensure admin user exists (but don't overwrite if it does)
+      const adminExists = users.some(u => u.username === 'admin')
+      if (!adminExists) {
+        const adminUser: User = {
+          id: 'admin-1',
+          username: 'admin',
+          email: 'admin@traineehub.com',
+          password: 'admin123',
+          role: 'admin',
+          createdAt: new Date().toISOString(),
+        }
+        if (useFirestore) {
+          await firestoreStorageService.addUser(adminUser)
+        } else {
+          storageService.addUser(adminUser)
+        }
       }
     }
   }
