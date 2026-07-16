@@ -134,6 +134,7 @@ export function Teachers({ teachers, trainees, onTeacherDelete, onTeacherAdd, on
                   <TableRow key={teacher.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={teacher.avatar}
                           alt={teacher.name}
