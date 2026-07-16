@@ -188,7 +188,6 @@ function StudentDetailView({ trainee, reports }: StudentDetailViewProps) {
     // Student Info Table
     autoTable(doc, {
       startY: yPos,
-      startX: 70,
       head: [['Field', 'Value']],
       body: [
         ['Name', trainee.name],
