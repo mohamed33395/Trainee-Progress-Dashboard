@@ -27,7 +27,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     language,
     setLanguage,
     t: translations[language],
-    dir: language === 'ar' ? 'rtl' : 'ltr',
+    dir: (language === 'ar' ? 'rtl' : 'ltr') as 'ltr' | 'rtl',
   }
 
   return (
