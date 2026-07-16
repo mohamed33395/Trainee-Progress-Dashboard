@@ -1,7 +1,7 @@
 {
+  "/teachers/page": "app/teachers/page.js",
   "/trainees/page": "app/trainees/page.js",
-  "/tasks/page": "app/tasks/page.js",
   "/daily-report/page": "app/daily-report/page.js",
-  "/analytics/page": "app/analytics/page.js",
-  "/settings/page": "app/settings/page.js"
+  "/student-reports/page": "app/student-reports/page.js",
+  "/user-management/page": "app/user-management/page.js"
 }
