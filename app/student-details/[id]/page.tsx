@@ -9,6 +9,11 @@ import { useParams } from 'next/navigation'
 export default function StudentDetailsPage() {
   const { trainees, reports } = useApp()
   const params = useParams()
+
+  if (!params?.id) {
+    return <div>Loading...</div>
+  }
+
   const id = params.id as string
 
   return (
