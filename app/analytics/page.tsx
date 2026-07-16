@@ -2,7 +2,7 @@
 
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
-import { Analytics } from '@/pages/Analytics'
+import { Analytics } from '@/page-components/Analytics'
 import { useApp } from '@/context/AppContext'
 
 export default function AnalyticsPage() {

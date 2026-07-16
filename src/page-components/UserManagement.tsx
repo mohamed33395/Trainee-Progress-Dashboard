@@ -113,36 +113,47 @@ export function UserManagement() {
     if (confirm('Are you sure you want to clear all data? This will delete all trainees, users, reports, and tasks from both localStorage and Firebase. This action cannot be undone.')) {
       // Clear localStorage
       storageService.clearAll()
-      localStorage.removeItem('firebase_configured')
-      localStorage.removeItem('firebase_config')
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('firebase_configured')
+        localStorage.removeItem('firebase_config')
+      }
       
       // Clear Firebase data
       if (useFirestore) {
         import('@/services/firestoreStorage').then(({ firestoreStorageService }) => {
           firestoreStorageService.clearAll().then(() => {
             alert('All data cleared successfully!')
-            window.location.reload()
+            if (typeof window !== 'undefined') {
+              window.location.reload()
+            }
           }).catch((error) => {
             console.error('Error clearing Firebase data:', error)
             alert('Local data cleared. Firebase data may need manual clearing.')
-            window.location.reload()
+            if (typeof window !== 'undefined') {
+              window.location.reload()
+            }
           })
         })
       } else {
         alert('All data cleared successfully!')
-        window.location.reload()
+        if (typeof window !== 'undefined') {
+          window.location.reload()
+        }
       }
     }
   }
 
   const handleEnableFirebase = () => {
-    localStorage.setItem('firebase_configured', 'true')
-    alert('Firebase enabled! The app will now reload to use Firestore.')
-    window.location.reload()
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('firebase_configured', 'true')
+      alert('Firebase enabled! The app will now reload to use Firestore.')
+      window.location.reload()
+    }
   }
 
   // Auto-enable Firebase on component mount if not already enabled
   useEffect(() => {
+    if (typeof window === 'undefined') return
     const firebaseConfigured = localStorage.getItem('firebase_configured')
     if (!firebaseConfigured || firebaseConfigured === 'false') {
       localStorage.setItem('firebase_configured', 'true')
@@ -150,9 +161,11 @@ export function UserManagement() {
   }, [])
 
   const handleDisableFirebase = () => {
-    localStorage.setItem('firebase_configured', 'false')
-    alert('Firebase disabled! The app will now reload to use localStorage.')
-    window.location.reload()
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('firebase_configured', 'false')
+      alert('Firebase disabled! The app will now reload to use localStorage.')
+      window.location.reload()
+    }
   }
 
   const handleSaveFirebaseConfig = () => {
@@ -162,11 +175,13 @@ export function UserManagement() {
     }
 
     // Save config to localStorage
-    localStorage.setItem('firebase_config', JSON.stringify(firebaseConfig))
-    localStorage.setItem('firebase_configured', 'true')
-    
-    alert('Firebase configuration saved! The app will now reload to use Firestore.')
-    setIsFirebaseConfigOpen(false)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('firebase_config', JSON.stringify(firebaseConfig))
+      localStorage.setItem('firebase_configured', 'true')
+      
+      alert('Firebase configuration saved! The app will now reload to use Firestore.')
+      setIsFirebaseConfigOpen(false)
+    }
     toggleStorage()
   }
 

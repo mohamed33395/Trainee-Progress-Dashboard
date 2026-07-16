@@ -10,11 +10,13 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window === 'undefined') return 'light'
     const savedTheme = localStorage.getItem('theme')
     return (savedTheme as 'light' | 'dark') || 'light'
   })
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
     const root = window.document.documentElement
     root.classList.remove('light', 'dark')
     root.classList.add(theme)

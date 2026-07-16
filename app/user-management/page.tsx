@@ -2,7 +2,7 @@
 
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
-import { UserManagement } from '@/pages/UserManagement'
+import { UserManagement } from '@/page-components/UserManagement'
 
 export default function UserManagementPage() {
   return (

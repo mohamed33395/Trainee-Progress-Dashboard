@@ -28,8 +28,10 @@ export function Settings() {
 
   const handleClearData = () => {
     if (confirm(t.settings.clearWarning)) {
-      localStorage.clear()
-      window.location.reload()
+      if (typeof window !== 'undefined') {
+        localStorage.clear()
+        window.location.reload()
+      }
     }
   }
 

@@ -2,7 +2,7 @@
 
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
-import { DailyReportForm } from '@/pages/DailyReport'
+import { DailyReportForm } from '@/page-components/DailyReport'
 import { useApp } from '@/context/AppContext'
 
 export default function DailyReportPage() {

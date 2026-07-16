@@ -2,7 +2,7 @@
 
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
-import { Tasks } from '@/pages/Tasks'
+import { Tasks } from '@/page-components/Tasks'
 
 export default function TasksPage() {
   return (

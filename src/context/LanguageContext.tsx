@@ -13,11 +13,13 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>(() => {
+    if (typeof window === 'undefined') return 'en'
     const saved = localStorage.getItem('language') as Language
     return saved || 'en'
   })
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
     localStorage.setItem('language', language)
     document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr'
     document.documentElement.lang = language

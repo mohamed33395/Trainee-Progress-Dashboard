@@ -2,7 +2,7 @@
 
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
-import { StudentDetails } from '@/pages/StudentDetails'
+import { StudentDetails } from '@/page-components/StudentDetails'
 import { useApp } from '@/context/AppContext'
 import { useParams } from 'next/navigation'
 

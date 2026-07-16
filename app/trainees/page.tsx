@@ -2,7 +2,7 @@
 
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
-import { Trainees } from '@/pages/Trainees'
+import { Trainees } from '@/page-components/Trainees'
 import { useApp } from '@/context/AppContext'
 
 export default function TraineesPage() {

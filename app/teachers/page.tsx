@@ -2,7 +2,7 @@
 
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
-import { Teachers } from '@/pages/Teachers'
+import { Teachers } from '@/page-components/Teachers'
 import { useApp } from '@/context/AppContext'
 
 export default function TeachersPage() {

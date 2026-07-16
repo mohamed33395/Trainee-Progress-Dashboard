@@ -46,6 +46,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [useFirestore, setUseFirestore] = useState(false)
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
+    
     // Always use Firebase by default to prevent data loss
     const firebaseConfig = localStorage.getItem('firebase_configured')
     const shouldUseFirestore = firebaseConfig !== 'false' // Default to true unless explicitly disabled
@@ -69,7 +71,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
             console.error('Firestore initialization failed, falling back to localStorage:', firestoreError)
             // Fallback to localStorage if Firestore fails
             setUseFirestore(false)
-            localStorage.setItem('firebase_configured', 'false')
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('firebase_configured', 'false')
+            }
             
             // Load data from localStorage without automatic mock data
             setTrainees(storageService.getTrainees())

@@ -16,6 +16,7 @@ class StorageService {
   // Generic get method
   private get<T>(key: string): T | null {
     try {
+      if (typeof window === 'undefined') return null
       const item = localStorage.getItem(key)
       return item ? JSON.parse(item) : null
     } catch (error) {
@@ -27,6 +28,7 @@ class StorageService {
   // Generic set method
   private set<T>(key: string, value: T): void {
     try {
+      if (typeof window === 'undefined') return
       localStorage.setItem(key, JSON.stringify(value))
     } catch (error) {
       console.error(`Error writing to localStorage key "${key}":`, error)
@@ -36,6 +38,7 @@ class StorageService {
   // Generic delete method
   private delete(key: string): void {
     try {
+      if (typeof window === 'undefined') return
       localStorage.removeItem(key)
     } catch (error) {
       console.error(`Error deleting from localStorage key "${key}":`, error)

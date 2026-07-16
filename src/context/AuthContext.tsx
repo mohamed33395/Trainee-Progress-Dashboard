@@ -22,6 +22,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
+    if (typeof window === 'undefined') return null
     const savedUserId = localStorage.getItem('currentUserId')
     if (savedUserId) {
       return storageService.getUserById(savedUserId)
@@ -29,13 +30,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return null
   })
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    if (typeof window === 'undefined') return false
     return localStorage.getItem('isAuthenticated') === 'true'
   })
   const [useFirestore, setUseFirestore] = useState(() => {
+    if (typeof window === 'undefined') return false
     return localStorage.getItem('firebase_configured') === 'true'
   })
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
     if (user) {
       localStorage.setItem('currentUserId', user.id)
       localStorage.setItem('isAuthenticated', 'true')
@@ -123,8 +127,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null)
     setIsAuthenticated(false)
-    localStorage.removeItem('currentUserId')
-    localStorage.removeItem('isAuthenticated')
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('currentUserId')
+      localStorage.removeItem('isAuthenticated')
+    }
   }
 
   const resetPassword = async (email: string): Promise<void> => {
@@ -153,8 +159,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const toggleStorage = () => {
     const newValue = !useFirestore
     setUseFirestore(newValue)
-    localStorage.setItem('firebase_configured', newValue ? 'true' : 'false')
-    window.location.reload()
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('firebase_configured', newValue ? 'true' : 'false')
+      window.location.reload()
+    }
   }
 
   return (

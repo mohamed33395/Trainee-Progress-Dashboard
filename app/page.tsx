@@ -1,10 +1,10 @@
 'use client'
 
 import { useAuth } from '@/context/AuthContext'
-import { Login } from '@/pages/Login'
+import { Login } from '@/page-components/Login'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
-import { Dashboard } from '@/pages/Dashboard'
+import { Dashboard } from '@/page-components/Dashboard'
 import { useApp } from '@/context/AppContext'
 
 export default function Home() {
