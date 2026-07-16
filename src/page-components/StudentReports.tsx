@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Search, Download, ArrowLeft, Calendar, FileText } from 'lucide-react'
 import { useLanguage } from '@/context/LanguageContext'
 import jsPDF from 'jspdf'
-import 'jspdf-autotable'
+import autoTable from 'jspdf-autotable'
 
 interface StudentReportsProps {
   trainees: Trainee[]
@@ -157,75 +157,195 @@ function StudentDetailView({ trainee, reports }: StudentDetailViewProps) {
 
   const downloadReport = (report: DailyReport) => {
     const doc = new jsPDF()
-    
-    // Header
-    doc.setFontSize(20)
-    doc.text('Daily Progress Report', 105, 20, { align: 'center' })
-    
-    // Student Info
-    doc.setFontSize(12)
-    doc.text(`Student: ${trainee.name}`, 20, 40)
-    doc.text(`Date: ${new Date(report.date).toLocaleDateString()}`, 20, 50)
-    doc.text(`Week: ${report.week}`, 20, 60)
-    doc.text(`Language Level: ${trainee.languageLevel}`, 20, 70)
-    
-    // Topics
-    doc.setFontSize(14)
-    doc.text('Topics Covered:', 20, 90)
-    doc.setFontSize(10)
-    doc.text(report.topics.join(', '), 20, 100)
-    
-    // Tasks
-    doc.setFontSize(14)
-    doc.text('Tasks:', 20, 120)
-    doc.setFontSize(10)
-    report.tasks.forEach((task, index) => {
-      doc.text(`${index + 1}. ${task.description} - ${task.completed ? 'Completed' : 'Pending'}`, 20, 130 + (index * 10))
+    let yPos = 20
+
+    // Header with title
+    doc.setFontSize(22)
+    doc.setTextColor(59, 130, 246)
+    doc.text('Daily Progress Report', 105, yPos, { align: 'center' })
+    yPos += 15
+
+    // Student photo and info table
+    if (trainee.avatar) {
+      try {
+        doc.addImage(trainee.avatar, 'JPEG', 20, yPos, 40, 40)
+      } catch (e) {
+        // If image fails, use placeholder
+        doc.setFillColor(200, 200, 200)
+        doc.rect(20, yPos, 40, 40, 'F')
+        doc.setFontSize(12)
+        doc.setTextColor(100, 100, 100)
+        doc.text('No Photo', 40, yPos + 25, { align: 'center' })
+      }
+    } else {
+      doc.setFillColor(200, 200, 200)
+      doc.rect(20, yPos, 40, 40, 'F')
+      doc.setFontSize(12)
+      doc.setTextColor(100, 100, 100)
+      doc.text('No Photo', 40, yPos + 25, { align: 'center' })
+    }
+
+    // Student Info Table
+    autoTable(doc, {
+      startY: yPos,
+      startX: 70,
+      head: [['Field', 'Value']],
+      body: [
+        ['Name', trainee.name],
+        ['Email', trainee.email],
+        ['Date', new Date(report.date).toLocaleDateString()],
+        ['Week', report.week.toString()],
+        ['Day', report.day.toString()],
+        ['Language Level', trainee.languageLevel],
+        ['Status', trainee.status],
+        ['Progress', `${trainee.progress}%`],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+      columnStyles: {
+        0: { cellWidth: 40, fontStyle: 'bold' },
+        1: { cellWidth: 80 },
+      },
+      margin: { top: yPos, left: 70, right: 20 },
     })
-    
-    // Evaluation
-    doc.setFontSize(14)
-    doc.text('Evaluation:', 20, 180)
-    doc.setFontSize(10)
-    doc.text(`Understanding: ${report.evaluation.understanding}/10`, 20, 190)
-    doc.text(`Coding Skills: ${report.evaluation.codingSkills}/10`, 20, 200)
-    doc.text(`Problem Solving: ${report.evaluation.problemSolving}/10`, 20, 210)
-    doc.text(`Debugging: ${report.evaluation.debugging}/10`, 20, 220)
-    doc.text(`Communication: ${report.evaluation.communication}/10`, 20, 230)
-    doc.text(`Code Quality: ${report.evaluation.codeQuality}/10`, 20, 240)
-    doc.text(`Attendance: ${report.evaluation.attendance}/10`, 20, 250)
-    
-    // Strengths and Improvements
-    doc.setFontSize(14)
-    doc.text('Strengths:', 20, 270)
-    doc.setFontSize(10)
-    doc.text(report.strengths, 20, 280)
-    
-    doc.setFontSize(14)
-    doc.text('Areas for Improvement:', 20, 300)
-    doc.setFontSize(10)
-    doc.text(report.needsImprovement, 20, 310)
-    
-    // Daily Notes
+
+    yPos = (doc as any).lastAutoTable.finalY + 15
+
+    // Topics Table
+    autoTable(doc, {
+      startY: yPos,
+      head: [['Topics Covered']],
+      body: report.topics.map(topic => [topic]),
+      theme: 'grid',
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+      margin: { left: 20, right: 20 },
+    })
+
+    yPos = (doc as any).lastAutoTable.finalY + 15
+
+    // Tasks Table
+    autoTable(doc, {
+      startY: yPos,
+      head: [['#', 'Task Description', 'Status']],
+      body: report.tasks.map((task, index) => [
+        index + 1,
+        task.description,
+        task.completed ? '✓ Completed' : '○ Pending',
+      ]),
+      theme: 'grid',
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+      columnStyles: {
+        0: { cellWidth: 10, halign: 'center' },
+        1: { cellWidth: 120 },
+        2: { cellWidth: 40, halign: 'center' },
+      },
+      margin: { left: 20, right: 20 },
+    })
+
+    yPos = (doc as any).lastAutoTable.finalY + 15
+
+    // Evaluation Table
+    autoTable(doc, {
+      startY: yPos,
+      head: [['Criteria', 'Score', 'Max']],
+      body: [
+        ['Understanding', report.evaluation.understanding, '10'],
+        ['Coding Skills', report.evaluation.codingSkills, '10'],
+        ['Problem Solving', report.evaluation.problemSolving, '10'],
+        ['Debugging', report.evaluation.debugging, '10'],
+        ['Communication', report.evaluation.communication, '10'],
+        ['Code Quality', report.evaluation.codeQuality, '10'],
+        ['Attendance', report.evaluation.attendance, '10'],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+      columnStyles: {
+        0: { cellWidth: 60 },
+        1: { cellWidth: 30, halign: 'center' },
+        2: { cellWidth: 20, halign: 'center' },
+      },
+      margin: { left: 20, right: 20 },
+    })
+
+    yPos = (doc as any).lastAutoTable.finalY + 15
+
+    // Strengths Table
+    autoTable(doc, {
+      startY: yPos,
+      head: [['Strengths']],
+      body: [[report.strengths]],
+      theme: 'grid',
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+      margin: { left: 20, right: 20 },
+    })
+
+    yPos = (doc as any).lastAutoTable.finalY + 15
+
+    // Areas for Improvement Table
+    autoTable(doc, {
+      startY: yPos,
+      head: [['Areas for Improvement']],
+      body: [[report.needsImprovement]],
+      theme: 'grid',
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+      margin: { left: 20, right: 20 },
+    })
+
+    yPos = (doc as any).lastAutoTable.finalY + 15
+
+    // Daily Notes Table
     if (report.dailyNotes) {
-      doc.setFontSize(14)
-      doc.text('Daily Notes:', 20, 330)
-      doc.setFontSize(10)
-      doc.text(report.dailyNotes, 20, 340)
+      autoTable(doc, {
+        startY: yPos,
+        head: [['Daily Notes']],
+        body: [[report.dailyNotes]],
+        theme: 'grid',
+        headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+        margin: { left: 20, right: 20 },
+      })
+      yPos = (doc as any).lastAutoTable.finalY + 15
     }
-    
-    // Tomorrow's Plan
+
+    // Tomorrow's Plan Table
     if (report.tomorrowPlan) {
-      doc.setFontSize(14)
-      doc.text("Tomorrow's Plan:", 20, 360)
-      doc.setFontSize(10)
-      doc.text(report.tomorrowPlan, 20, 370)
+      autoTable(doc, {
+        startY: yPos,
+        head: [["Tomorrow's Plan"]],
+        body: [[report.tomorrowPlan]],
+        theme: 'grid',
+        headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+        margin: { left: 20, right: 20 },
+      })
+      yPos = (doc as any).lastAutoTable.finalY + 15
     }
-    
+
     // Overall Progress
-    doc.setFontSize(14)
-    doc.text(`Overall Progress: ${report.overallProgress}%`, 20, 390)
-    
+    autoTable(doc, {
+      startY: yPos,
+      head: [['Overall Progress']],
+      body: [[`${report.overallProgress}%`]],
+      theme: 'grid',
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+      columnStyles: {
+        0: { halign: 'center', fontSize: 16, fontStyle: 'bold' },
+      },
+      margin: { left: 20, right: 20 },
+    })
+
+    // Footer
+    const pageCount = doc.getNumberOfPages()
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i)
+      doc.setFontSize(10)
+      doc.setTextColor(150, 150, 150)
+      doc.text(
+        `Generated on ${new Date().toLocaleDateString()} - Page ${i} of ${pageCount}`,
+        105,
+        doc.internal.pageSize.height - 10,
+        { align: 'center' }
+      )
+    }
+
     doc.save(`${trainee.name.replace(/\s+/g, '_')}_report_${report.date}.pdf`)
   }
 
