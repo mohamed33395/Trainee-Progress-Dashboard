@@ -20,7 +20,8 @@ interface StudentReportsProps {
 
 export function StudentReports({ trainees, reports }: StudentReportsProps) {
   const { t } = useLanguage()
-  const { id } = useParams<{ id: string }>()
+  const params = useParams<{ id: string }>()
+  const id = params?.id
   const [searchQuery, setSearchQuery] = useState('')
 
   // If an ID is provided, show student detail view
@@ -126,7 +127,7 @@ export function StudentReports({ trainees, reports }: StudentReportsProps) {
                     <TableCell>{reports.filter(r => r.traineeId === trainee.id).length}</TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="sm" asChild>
-                        <Link to={`/student-reports/${trainee.id}`}>
+                        <Link href={`/student-reports/${trainee.id}`}>
                           {t.studentReports.viewReports}
                         </Link>
                       </Button>
@@ -236,7 +237,7 @@ function StudentDetailView({ trainee, reports }: StudentDetailViewProps) {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" asChild>
-          <Link to="/student-reports">
+          <Link href="/student-reports">
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>

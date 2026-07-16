@@ -348,7 +348,7 @@ class FirestoreStorageService {
   }
 
   // Settings operations
-  async getSettings(): Record<string, any> {
+  async getSettings(): Promise<Record<string, any>> {
     const data = await this.getAllData()
     return data.settings || {}
   }

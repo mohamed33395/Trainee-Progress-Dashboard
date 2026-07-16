@@ -177,7 +177,7 @@ export function Trainees({ trainees, teachers, onTraineeDelete, onTraineeAdd, on
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem asChild>
-                            <Link to={`/student-details/${trainee.id}`}>
+                            <Link href={`/student-details/${trainee.id}`}>
                               <Eye className="h-4 w-4 mr-2" />
                               {t.common.view}
                             </Link>

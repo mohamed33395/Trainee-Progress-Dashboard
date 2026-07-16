@@ -38,6 +38,7 @@ export interface Translations {
     teamLeader: string
     trainee: string
     userManagement: string
+    select: string
   }
   dashboard: {
     title: string
@@ -252,6 +253,7 @@ export interface Translations {
     subtitle: string
     addUser: string
     allUsers: string
+    noUsers: string
     username: string
     email: string
     password: string
@@ -312,6 +314,7 @@ export const translations: Record<Language, Translations> = {
       teamLeader: 'TEAM LEADER',
       trainee: 'TRAINEE',
       userManagement: 'User Management',
+      select: 'Select',
     },
     dashboard: {
       title: 'Work Dashboard',
@@ -526,6 +529,7 @@ export const translations: Record<Language, Translations> = {
       subtitle: 'Manage user accounts and permissions',
       addUser: 'Add User',
       allUsers: 'All Users',
+      noUsers: 'No users found',
       username: 'Username',
       email: 'Email',
       password: 'Password',
@@ -584,6 +588,7 @@ export const translations: Record<Language, Translations> = {
       teamLeader: 'قائد فريق',
       trainee: 'متدرب',
       userManagement: 'إدارة المستخدمين',
+      select: 'اختر',
     },
     dashboard: {
       title: 'لوحة العمل',
@@ -798,6 +803,7 @@ export const translations: Record<Language, Translations> = {
       subtitle: 'إدارة حسابات المستخدمين والصلاحيات',
       addUser: 'إضافة مستخدم',
       allUsers: 'جميع المستخدمين',
+      noUsers: 'لم يتم العثور على مستخدمين',
       username: 'اسم المستخدم',
       email: 'البريد الإلكتروني',
       password: 'كلمة المرور',

@@ -1,4 +1,4 @@
-import { Trainee, DailyReport, Topic, Teacher } from '../types'
+import { Trainee, DailyReport, Topic, Teacher, ReportTask } from '../types'
 
 export const mockTrainees: Trainee[] = [
   {
@@ -144,9 +144,9 @@ export const mockReports: DailyReport[] = [
     day: 5,
     topics: ['React', 'TypeScript', 'Tailwind CSS'],
     tasks: [
-      { id: 't1', description: 'Build login component', completed: true },
-      { id: 't2', description: 'Implement form validation', completed: true },
-      { id: 't3', description: 'Add responsive design', completed: false },
+      { id: 't1', description: 'Build login component', completed: true } as ReportTask,
+      { id: 't2', description: 'Implement form validation', completed: true } as ReportTask,
+      { id: 't3', description: 'Add responsive design', completed: false } as ReportTask,
     ],
     evaluation: {
       understanding: 7,
@@ -172,9 +172,9 @@ export const mockReports: DailyReport[] = [
     day: 5,
     topics: ['Next.js', 'TypeScript', 'Git'],
     tasks: [
-      { id: 't1', description: 'Set up Next.js project', completed: true },
-      { id: 't2', description: 'Configure TypeScript', completed: true },
-      { id: 't3', description: 'Implement API routes', completed: true },
+      { id: 't1', description: 'Set up Next.js project', completed: true } as ReportTask,
+      { id: 't2', description: 'Configure TypeScript', completed: true } as ReportTask,
+      { id: 't3', description: 'Implement API routes', completed: true } as ReportTask,
     ],
     evaluation: {
       understanding: 9,
@@ -200,9 +200,9 @@ export const mockReports: DailyReport[] = [
     day: 5,
     topics: ['React', 'Next.js', 'Tailwind CSS'],
     tasks: [
-      { id: 't1', description: 'Build e-commerce product page', completed: true },
-      { id: 't2', description: 'Implement shopping cart', completed: true },
-      { id: 't3', description: 'Add payment integration', completed: true },
+      { id: 't1', description: 'Build e-commerce product page', completed: true } as ReportTask,
+      { id: 't2', description: 'Implement shopping cart', completed: true } as ReportTask,
+      { id: 't3', description: 'Add payment integration', completed: true } as ReportTask,
     ],
     evaluation: {
       understanding: 10,
@@ -228,9 +228,9 @@ export const mockReports: DailyReport[] = [
     day: 4,
     topics: ['HTML', 'CSS', 'JavaScript'],
     tasks: [
-      { id: 't1', description: 'Create HTML structure', completed: true },
-      { id: 't2', description: 'Style with CSS', completed: true },
-      { id: 't3', description: 'Add JavaScript interactivity', completed: true },
+      { id: 't1', description: 'Create HTML structure', completed: true } as ReportTask,
+      { id: 't2', description: 'Style with CSS', completed: true } as ReportTask,
+      { id: 't3', description: 'Add JavaScript interactivity', completed: true } as ReportTask,
     ],
     evaluation: {
       understanding: 8,
@@ -256,9 +256,9 @@ export const mockReports: DailyReport[] = [
     day: 4,
     topics: ['React', 'TypeScript', 'Tailwind CSS'],
     tasks: [
-      { id: 't1', description: 'Build reusable components', completed: true },
-      { id: 't2', description: 'Implement state management', completed: true },
-      { id: 't3', description: 'Add unit tests', completed: false },
+      { id: 't1', description: 'Build reusable components', completed: true } as ReportTask,
+      { id: 't2', description: 'Implement state management', completed: true } as ReportTask,
+      { id: 't3', description: 'Add unit tests', completed: false } as ReportTask,
     ],
     evaluation: {
       understanding: 9,

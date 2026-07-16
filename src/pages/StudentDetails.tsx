@@ -19,7 +19,8 @@ interface StudentDetailsProps {
 
 export function StudentDetails({ trainees, reports }: StudentDetailsProps) {
   const { t } = useLanguage()
-  const { id } = useParams<{ id: string }>()
+  const params = useParams<{ id: string }>()
+  const id = params?.id
   const trainee = trainees.find(t => t.id === id)
   const traineeReports = reports.filter(r => r.traineeId === id)
 

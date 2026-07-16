@@ -28,7 +28,7 @@ export type Subject =
   | 'Project Management'
   | 'Other'
 
-export interface Task {
+export interface ReportTask {
   id: string
   description: string
   completed: boolean
@@ -51,7 +51,7 @@ export interface DailyReport {
   week: number
   day: number
   topics: Topic[]
-  tasks: Task[]
+  tasks: ReportTask[]
   evaluation: Evaluation
   strengths: string
   needsImprovement: string

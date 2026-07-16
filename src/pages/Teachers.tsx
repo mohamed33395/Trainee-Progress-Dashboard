@@ -160,7 +160,7 @@ export function Teachers({ teachers, trainees, onTeacherDelete, onTeacherAdd, on
                         {teacher.status === 'active' ? t.common.active : 
                          teacher.status === 'inactive' ? t.common.inactive : 
                          teacher.status === 'on-leave' ? t.common.onLeave : 
-                         teacher.status.charAt(0).toUpperCase() + teacher.status.slice(1).replace('-', ' ')}
+                         (teacher.status as string).charAt(0).toUpperCase() + (teacher.status as string).slice(1).replace('-', ' ')}
                       </Badge>
                     </TableCell>
                     <TableCell>

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { Trainee, Topic, Task, Evaluation, DailyReport } from '@/types'
+import { Trainee, Topic, ReportTask, Evaluation, DailyReport } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -65,7 +65,7 @@ export function DailyReportForm({ trainees, onSaveReport }: DailyReportFormProps
   const { t } = useLanguage()
   const { toast } = useToast()
   const [selectedTopics, setSelectedTopics] = useState<Topic[]>([])
-  const [tasks, setTasks] = useState<Task[]>([
+  const [tasks, setTasks] = useState<ReportTask[]>([
     { id: '1', description: '', completed: false },
   ])
   const [evaluation, setEvaluation] = useState<Evaluation>({
@@ -103,7 +103,7 @@ export function DailyReportForm({ trainees, onSaveReport }: DailyReportFormProps
   }
 
   const addTask = () => {
-    const newTask: Task = {
+    const newTask: ReportTask = {
       id: Date.now().toString(),
       description: '',
       completed: false,
@@ -119,7 +119,7 @@ export function DailyReportForm({ trainees, onSaveReport }: DailyReportFormProps
     setValue('tasks', newTasks)
   }
 
-  const updateTask = (id: string, field: keyof Task, value: string | boolean) => {
+  const updateTask = (id: string, field: keyof ReportTask, value: string | boolean) => {
     const newTasks = tasks.map(t => t.id === id ? { ...t, [field]: value } : t)
     setTasks(newTasks)
     setValue('tasks', newTasks)
@@ -165,7 +165,7 @@ export function DailyReportForm({ trainees, onSaveReport }: DailyReportFormProps
     // Reset form
     reset()
     setSelectedTopics([])
-    setTasks([{ id: '1', description: '', completed: false }])
+    setTasks([{ id: '1', description: '', completed: false } as ReportTask])
     setEvaluation({
       understanding: 5,
       codingSkills: 5,

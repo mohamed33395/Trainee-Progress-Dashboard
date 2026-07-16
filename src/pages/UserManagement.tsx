@@ -276,7 +276,7 @@ export function UserManagement() {
         </CardHeader>
         <CardContent>
           {filteredUsers.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">{t.common.noTrainees}</p>
+            <p className="text-center text-muted-foreground py-8">{t.userManagement.noUsers}</p>
           ) : (
             <div className="space-y-4">
               {filteredUsers.map(user => (
