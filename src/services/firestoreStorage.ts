@@ -126,12 +126,7 @@ class FirestoreStorageService {
 
   async setTrainees(trainees: Trainee[]): Promise<void> {
     try {
-      const collectionRef = this.getCollectionRef(this.collections.trainees)
-      // Delete all existing documents
-      const existingDocs = await getDocs(collectionRef)
-      await Promise.all(existingDocs.docs.map(doc => deleteDoc(doc.ref)))
-      
-      // Add all trainees as individual documents
+      // Only add/update trainees without deleting existing ones
       await Promise.all(trainees.map(trainee => 
         setDoc(this.getDocRef(this.collections.trainees, trainee.id), trainee)
       ))
@@ -193,10 +188,7 @@ class FirestoreStorageService {
 
   async setReports(reports: DailyReport[]): Promise<void> {
     try {
-      const collectionRef = this.getCollectionRef(this.collections.reports)
-      const existingDocs = await getDocs(collectionRef)
-      await Promise.all(existingDocs.docs.map(doc => deleteDoc(doc.ref)))
-      
+      // Only add/update reports without deleting existing ones
       await Promise.all(reports.map(report => 
         setDoc(this.getDocRef(this.collections.reports, report.id), report)
       ))
@@ -258,10 +250,7 @@ class FirestoreStorageService {
 
   async setTeachers(teachers: Teacher[]): Promise<void> {
     try {
-      const collectionRef = this.getCollectionRef(this.collections.teachers)
-      const existingDocs = await getDocs(collectionRef)
-      await Promise.all(existingDocs.docs.map(doc => deleteDoc(doc.ref)))
-      
+      // Only add/update teachers without deleting existing ones
       await Promise.all(teachers.map(teacher => 
         setDoc(this.getDocRef(this.collections.teachers, teacher.id), teacher)
       ))
@@ -323,10 +312,7 @@ class FirestoreStorageService {
 
   async setTasks(tasks: Task[]): Promise<void> {
     try {
-      const collectionRef = this.getCollectionRef(this.collections.tasks)
-      const existingDocs = await getDocs(collectionRef)
-      await Promise.all(existingDocs.docs.map(doc => deleteDoc(doc.ref)))
-      
+      // Only add/update tasks without deleting existing ones
       await Promise.all(tasks.map(task => 
         setDoc(this.getDocRef(this.collections.tasks, task.id), task)
       ))
@@ -388,10 +374,7 @@ class FirestoreStorageService {
 
   async setUsers(users: User[]): Promise<void> {
     try {
-      const collectionRef = this.getCollectionRef(this.collections.users)
-      const existingDocs = await getDocs(collectionRef)
-      await Promise.all(existingDocs.docs.map(doc => deleteDoc(doc.ref)))
-      
+      // Only add/update users without deleting existing ones
       await Promise.all(users.map(user => 
         setDoc(this.getDocRef(this.collections.users, user.id), user)
       ))
@@ -463,10 +446,7 @@ class FirestoreStorageService {
 
   async setNotifications(notifications: Notification[]): Promise<void> {
     try {
-      const collectionRef = this.getCollectionRef(this.collections.notifications)
-      const existingDocs = await getDocs(collectionRef)
-      await Promise.all(existingDocs.docs.map(doc => deleteDoc(doc.ref)))
-      
+      // Only add/update notifications without deleting existing ones
       await Promise.all(notifications.map(notification => 
         setDoc(this.getDocRef(this.collections.notifications, notification.id), notification)
       ))

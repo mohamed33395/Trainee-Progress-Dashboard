@@ -49,68 +49,39 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof window === 'undefined') return
     
-    // Always use Firebase by default to prevent data loss
-    const firebaseConfig = localStorage.getItem('firebase_configured')
-    const shouldUseFirestore = firebaseConfig !== 'false' // Default to true unless explicitly disabled
-    setUseFirestore(shouldUseFirestore)
+    // Force Firebase only - no localStorage fallback
+    setUseFirestore(true)
 
     const initializeData = async () => {
       try {
-        if (shouldUseFirestore) {
-          // Initialize Firestore
-          try {
-            await firestoreStorageService.initializeData()
-            
-            // Check if migration is needed (old single-document structure)
-            const migrationNeeded = await checkMigrationNeeded()
-            if (migrationNeeded) {
-              console.log('Migration needed - running migration script...')
-              const migrationResult = await migrateToSeparateCollections()
-              if (migrationResult.success) {
-                console.log('Migration successful:', migrationResult.message)
-              } else {
-                console.error('Migration failed:', migrationResult.message)
-              }
-            }
-            
-            // Always load existing data from Firebase - never overwrite
-            const data = await firestoreStorageService.getAllData()
-            setTrainees(data.trainees || [])
-            setReports(data.reports || [])
-            setTeachers(data.teachers || [])
-            setTasks(data.tasks || [])
-            setUsers(data.users || [])
-            setNotifications(data.notifications || [])
-          } catch (firestoreError) {
-            console.error('Firestore initialization failed, falling back to localStorage:', firestoreError)
-            // Fallback to localStorage if Firestore fails
-            setUseFirestore(false)
-            if (typeof window !== 'undefined') {
-              localStorage.setItem('firebase_configured', 'false')
-            }
-            
-            // Load data from localStorage without automatic mock data
-            setTrainees(storageService.getTrainees())
-            setReports(storageService.getReports())
-            setTeachers(storageService.getTeachers())
-            setTasks(storageService.getTasks() || [])
-            setUsers(storageService.getUsers() || [])
-            setNotifications(storageService.getNotifications() || [])
-          }
-        } else {
-          // Use localStorage without automatic mock data
-          setTrainees(storageService.getTrainees())
-          setReports(storageService.getReports())
-          setTeachers(storageService.getTeachers())
-          setTasks(storageService.getTasks() || [])
-          setUsers(storageService.getUsers() || [])
-          setNotifications(storageService.getNotifications() || [])
-        }
+        // Initialize Firestore
+        await firestoreStorageService.initializeData()
+        
+        // Disable automatic migration to prevent data deletion
+        // const migrationNeeded = await checkMigrationNeeded()
+        // if (migrationNeeded) {
+        //   console.log('Migration needed - running migration script...')
+        //   const migrationResult = await migrateToSeparateCollections()
+        //   if (migrationResult.success) {
+        //     console.log('Migration successful:', migrationResult.message)
+        //   } else {
+        //     console.error('Migration failed:', migrationResult.message)
+        //   }
+        // }
+        
+        // Always load existing data from Firebase - never overwrite
+        const data = await firestoreStorageService.getAllData()
+        setTrainees(data.trainees || [])
+        setReports(data.reports || [])
+        setTeachers(data.teachers || [])
+        setTasks(data.tasks || [])
+        setUsers(data.users || [])
+        setNotifications(data.notifications || [])
+        
         setIsInitialized(true)
       } catch (error) {
-        console.error('Error initializing data:', error)
-        // Fallback to localStorage if Firestore fails
-        setUseFirestore(false)
+        console.error('Error initializing data from Firebase:', error)
+        // Show error instead of falling back to localStorage
         setIsInitialized(true)
       }
     }

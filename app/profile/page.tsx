@@ -98,7 +98,6 @@ export default function ProfilePage() {
                 <span className="text-muted-foreground">Status:</span>
                 <span className={`font-medium ${
                   trainee?.status === 'active' ? 'text-green-600' :
-                  trainee?.status === 'inactive' ? 'text-gray-600' :
                   trainee?.status === 'completed' ? 'text-blue-600' :
                   'text-orange-600'
                 }`}>
