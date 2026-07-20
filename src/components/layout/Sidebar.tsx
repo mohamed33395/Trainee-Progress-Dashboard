@@ -127,7 +127,7 @@ export function Sidebar() {
                 )}
 
                 {/* Admin Image Modal */}
-                {showAdminImage && (
+                {showAdminImage && user && (
                     <div
                         className="fixed inset-0 z-50 flex items-center justify-center bg-purple-950/80 backdrop-blur-sm"
                         onClick={() => setShowAdminImage(false)}
