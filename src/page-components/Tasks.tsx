@@ -114,7 +114,7 @@ export function Tasks({ currentTraineeId }: TasksProps) {
       id: Date.now().toString(),
       title: formData.title,
       description: formData.description,
-      imageUrl: taskImage || undefined,
+      imageUrl: taskImage || '',
       assignedTraineeId: formData.assignedTraineeId,
       status: 'pending',
       createdAt: new Date().toISOString(),
