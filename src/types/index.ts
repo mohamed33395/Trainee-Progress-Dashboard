@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'team_leader' | 'trainee'
+export type UserRole = 'admin' | 'team_leader' | 'teacher' | 'trainee'
 
 export type TraineeStatus = 'active' | 'completed' | 'on-hold' | 'dropped'
 
@@ -129,6 +129,8 @@ export interface Task {
   createdAt: string
   dueDate?: string
   submission?: TaskSubmission
+  skills?: string[] // Skills associated with this task
+  maxScore?: number // Maximum score for this task
 }
 
 export interface User {
@@ -151,4 +153,31 @@ export interface Notification {
   relatedId?: string
   isRead: boolean
   createdAt: string
+}
+
+export interface RolePermissions {
+  canViewDashboard: boolean
+  canViewTrainees: boolean
+  canViewTeachers: boolean
+  canViewTasks: boolean
+  canViewDailyReports: boolean
+  canViewStudentReports: boolean
+  canViewAnalytics: boolean
+  canViewUserManagement: boolean
+  canViewSettings: boolean
+  canAddTrainees: boolean
+  canEditTrainees: boolean
+  canDeleteTrainees: boolean
+  canAddTeachers: boolean
+  canEditTeachers: boolean
+  canDeleteTeachers: boolean
+  canAddTasks: boolean
+  canEditTasks: boolean
+  canDeleteTasks: boolean
+  canReviewTasks: boolean
+  canAddDailyReports: boolean
+  canEditDailyReports: boolean
+  canDeleteDailyReports: boolean
+  canManageUsers: boolean
+  canManagePermissions: boolean
 }

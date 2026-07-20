@@ -19,7 +19,7 @@ interface TasksProps {
 
 export function Tasks({ currentTraineeId }: TasksProps) {
   const { t } = useLanguage()
-  const { tasks, trainees, addTask, updateTask, deleteTask, users } = useApp()
+  const { tasks, trainees, addTask, updateTask, deleteTask, users, updateTrainee } = useApp()
   const { user, isTrainee, isTeamLeader } = useAuth()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isSubmissionOpen, setIsSubmissionOpen] = useState(false)
@@ -30,12 +30,17 @@ export function Tasks({ currentTraineeId }: TasksProps) {
   // Determine the current trainee ID based on user role
   const effectiveTraineeId = currentTraineeId || (isTrainee() && user?.traineeId ? user.traineeId : undefined)
   
+  // For trainees without traineeId, show all tasks (they can filter by trainee themselves)
+  const showAllTasksForTrainee = isTrainee() && !user?.traineeId
+  
   // Form state
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     assignedTraineeId: '',
     dueDate: '',
+    skills: [] as string[],
+    maxScore: 10,
   })
 
   // Submission state
@@ -50,7 +55,9 @@ export function Tasks({ currentTraineeId }: TasksProps) {
 
   const filteredTasks = effectiveTraineeId 
     ? tasks.filter(task => task.assignedTraineeId === effectiveTraineeId)
-    : tasks
+    : showAllTasksForTrainee 
+      ? tasks 
+      : tasks
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'task' | 'code' | 'project') => {
     const file = e.target.files?.[0]
@@ -98,7 +105,8 @@ export function Tasks({ currentTraineeId }: TasksProps) {
   }
 
   const handleAddTask = () => {
-    if (!formData.title || !formData.description || !formData.assignedTraineeId || !taskImage) {
+    if (!formData.title || !formData.description || !formData.assignedTraineeId) {
+      alert('Please fill in all required fields (title, description, and assignee)')
       return
     }
 
@@ -106,16 +114,18 @@ export function Tasks({ currentTraineeId }: TasksProps) {
       id: Date.now().toString(),
       title: formData.title,
       description: formData.description,
-      imageUrl: taskImage,
+      imageUrl: taskImage || undefined,
       assignedTraineeId: formData.assignedTraineeId,
       status: 'pending',
       createdAt: new Date().toISOString(),
       dueDate: formData.dueDate || undefined,
+      skills: formData.skills,
+      maxScore: formData.maxScore,
     }
 
     addTask(newTask)
     setIsFormOpen(false)
-    setFormData({ title: '', description: '', assignedTraineeId: '', dueDate: '' })
+    setFormData({ title: '', description: '', assignedTraineeId: '', dueDate: '', skills: [], maxScore: 10 })
     setTaskImage(null)
     setTaskImageFile(null)
   }
@@ -148,10 +158,10 @@ export function Tasks({ currentTraineeId }: TasksProps) {
     })
   }
 
-  const handleReviewTask = (taskId: string, approved: boolean) => {
+  const handleReviewTask = async (taskId: string, approved: boolean) => {
     const task = tasks.find(t => t.id === taskId)
     if (task && task.submission) {
-      updateTask(taskId, {
+      await updateTask(taskId, {
         status: approved ? 'completed' : 'rejected',
         submission: {
           ...task.submission,
@@ -159,6 +169,24 @@ export function Tasks({ currentTraineeId }: TasksProps) {
           instructorFeedback: approved ? 'Great work!' : 'Please review and resubmit.',
         }
       })
+
+      // If approved, update trainee skills progress
+      if (approved && task.skills && task.maxScore) {
+        const trainee = trainees.find(t => t.id === task.assignedTraineeId)
+        if (trainee) {
+          const scorePercentage = (task.submission.instructorRating / task.maxScore) * 100
+          const updatedSkillsProgress = { ...trainee.skillsProgress }
+
+          task.skills.forEach(skill => {
+            const currentProgress = updatedSkillsProgress[skill] || 0
+            // Add the score percentage to the skill progress (capped at 100)
+            updatedSkillsProgress[skill] = Math.min(100, currentProgress + scorePercentage * 0.1)
+          })
+
+          // Update trainee skills progress through context
+          await updateTrainee(trainee.id, { skillsProgress: updatedSkillsProgress })
+        }
+      }
     }
   }
 
@@ -242,7 +270,7 @@ export function Tasks({ currentTraineeId }: TasksProps) {
                     </div>
                   )}
 
-                  {task.status === 'pending' && effectiveTraineeId && (
+                  {task.status === 'pending' && (effectiveTraineeId || showAllTasksForTrainee || isTeamLeader()) && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -385,6 +413,42 @@ export function Tasks({ currentTraineeId }: TasksProps) {
                 value={formData.dueDate}
                 onChange={(e) => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="maxScore">{t.tasks.maxScore}</Label>
+              <Input
+                id="maxScore"
+                type="number"
+                min="1"
+                max="100"
+                value={formData.maxScore}
+                onChange={(e) => setFormData(prev => ({ ...prev, maxScore: parseInt(e.target.value) }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>{t.tasks.skills}</Label>
+              <div className="flex flex-wrap gap-2">
+                {['HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Next.js', 'Git', 'Tailwind CSS'].map(skill => (
+                  <Button
+                    key={skill}
+                    type="button"
+                    variant={formData.skills.includes(skill) ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        skills: prev.skills.includes(skill)
+                          ? prev.skills.filter(s => s !== skill)
+                          : [...prev.skills, skill]
+                      }))
+                    }}
+                  >
+                    {skill}
+                  </Button>
+                ))}
+              </div>
             </div>
 
             <div className="space-y-2">

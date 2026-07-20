@@ -7,7 +7,7 @@ import { AppProvider } from '@/context/AppContext'
 import { Toaster } from '@/components/ui/toaster'
 
 export const metadata: Metadata = {
-  title: 'Trainee Progress Dashboard',
+  title: 'Trainee Control Panel in New Vision',
   description: 'Trainee Progress Management System',
 }
 

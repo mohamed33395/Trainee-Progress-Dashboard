@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts'
 import { TrendingUp, Users, Award, Target } from 'lucide-react'
 import { useLanguage } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
 
@@ -13,15 +14,27 @@ interface AnalyticsProps {
 
 export function Analytics({ trainees, reports }: AnalyticsProps) {
   const { t } = useLanguage()
+  const { user, isTrainee } = useAuth()
+  
+  // Filter data based on user role
+  const currentTrainee = isTrainee() && user?.traineeId 
+    ? trainees.find(t => t.id === user.traineeId)
+    : null
+  
+  const displayTrainees = currentTrainee ? [currentTrainee] : trainees
+  const displayReports = currentTrainee 
+    ? reports.filter(r => r.traineeId === currentTrainee.id)
+    : reports
+  
   // Skills distribution across all trainees
   const skillsData = ['HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Next.js', 'Git', 'Tailwind CSS'].map(skill => {
-    const total = trainees.reduce((acc, t) => acc + (t.skillsProgress[skill] || 0), 0)
-    const average = trainees.length > 0 ? Math.round(total / trainees.length) : 0
+    const total = displayTrainees.reduce((acc, t) => acc + (t.skillsProgress[skill] || 0), 0)
+    const average = displayTrainees.length > 0 ? Math.round(total / displayTrainees.length) : 0
     return { skill, average }
   })
 
   // Progress by status
-  const progressByStatus = trainees.reduce((acc, t) => {
+  const progressByStatus = displayTrainees.reduce((acc, t) => {
     const status = t.status
     if (!acc[status]) {
       acc[status] = { count: 0, totalProgress: 0 }
@@ -38,7 +51,7 @@ export function Analytics({ trainees, reports }: AnalyticsProps) {
   }))
 
   // Weekly report trends
-  const weeklyReports = reports.reduce((acc, report) => {
+  const weeklyReports = displayReports.reduce((acc, report) => {
     const week = report.week
     if (!acc[week]) {
       acc[week] = { count: 0, totalProgress: 0 }

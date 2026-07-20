@@ -39,7 +39,7 @@ This guide will help you set up Firebase Firestore to enable permanent cloud sto
 ### 4. Configure Your Application
 
 1. Open your Trainee Progress Dashboard application
-2. Log in as an Admin user (`admin` / `admin123`)
+2. Log in as an Admin user (`)
 3. Navigate to "User Management"
 4. Click the "Setup Firebase" button
 5. Fill in the configuration fields:

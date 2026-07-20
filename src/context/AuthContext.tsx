@@ -12,6 +12,7 @@ interface AuthContextType {
   isAuthenticated: boolean
   hasRole: (role: UserRole) => boolean
   isTrainee: () => boolean
+  isTeacher: () => boolean
   isTeamLeader: () => boolean
   isAdmin: () => boolean
   useFirestore: boolean
@@ -23,9 +24,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
     if (typeof window === 'undefined') return null
-    const savedUserId = localStorage.getItem('currentUserId')
-    if (savedUserId) {
-      return storageService.getUserById(savedUserId)
+    const savedUser = localStorage.getItem('currentUser')
+    if (savedUser) {
+      try {
+        return JSON.parse(savedUser)
+      } catch (error) {
+        console.error('Error parsing saved user:', error)
+        return null
+      }
     }
     return null
   })
@@ -41,10 +47,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (user) {
-      localStorage.setItem('currentUserId', user.id)
+      localStorage.setItem('currentUser', JSON.stringify(user))
       localStorage.setItem('isAuthenticated', 'true')
     } else {
-      localStorage.removeItem('currentUserId')
+      localStorage.removeItem('currentUser')
       localStorage.removeItem('isAuthenticated')
     }
   }, [user, isAuthenticated])
@@ -128,7 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     setIsAuthenticated(false)
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('currentUserId')
+      localStorage.removeItem('currentUser')
       localStorage.removeItem('isAuthenticated')
     }
   }
@@ -146,6 +152,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isTrainee = (): boolean => {
     return hasRole('trainee')
+  }
+
+  const isTeacher = (): boolean => {
+    return hasRole('teacher')
   }
 
   const isTeamLeader = (): boolean => {
@@ -166,7 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, resetPassword, isAuthenticated, hasRole, isTrainee, isTeamLeader, isAdmin, useFirestore, toggleStorage }}>
+    <AuthContext.Provider value={{ user, login, logout, resetPassword, isAuthenticated, hasRole, isTrainee, isTeacher, isTeamLeader, isAdmin, useFirestore, toggleStorage }}>
       {children}
     </AuthContext.Provider>
   )

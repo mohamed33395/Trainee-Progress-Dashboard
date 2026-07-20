@@ -97,6 +97,53 @@ class StorageService {
     return this.get<string>(STORAGE_KEYS.LAST_BACKUP)
   }
 
+  // Export all data to JSON file
+  exportData(): string {
+    try {
+      const exportData = {
+        trainees: this.getTrainees(),
+        reports: this.getReports(),
+        teachers: this.getTeachers(),
+        tasks: this.getTasks(),
+        users: this.getUsers(),
+        notifications: this.getNotifications(),
+        settings: this.getSettings(),
+        exportDate: new Date().toISOString(),
+        version: '1.0'
+      }
+      return JSON.stringify(exportData, null, 2)
+    } catch (error) {
+      console.error('Error exporting data:', error)
+      throw error
+    }
+  }
+
+  // Import data from JSON string
+  importData(jsonString: string): void {
+    try {
+      const importData = JSON.parse(jsonString)
+      
+      // Validate data structure
+      if (!importData.version) {
+        throw new Error('Invalid data format: missing version')
+      }
+
+      // Import each data type
+      if (importData.trainees) this.setTrainees(importData.trainees)
+      if (importData.reports) this.setReports(importData.reports)
+      if (importData.teachers) this.setTeachers(importData.teachers)
+      if (importData.tasks) this.setTasks(importData.tasks)
+      if (importData.users) this.setUsers(importData.users)
+      if (importData.notifications) this.setNotifications(importData.notifications)
+      if (importData.settings) this.setSettings(importData.settings)
+
+      console.log('Data imported successfully from:', importData.exportDate)
+    } catch (error) {
+      console.error('Error importing data:', error)
+      throw error
+    }
+  }
+
   // Auto backup before critical operations
   private autoBackup(): void {
     const lastBackup = this.getLastBackupTime()

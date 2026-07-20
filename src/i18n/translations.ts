@@ -11,6 +11,7 @@ export interface Translations {
     analytics: string
     settings: string
     tasks: string
+    profile: string
     search: string
     add: string
     edit: string
@@ -36,6 +37,7 @@ export interface Translations {
     appName: string
     admin: string
     teamLeader: string
+    teacher: string
     trainee: string
     userManagement: string
     select: string
@@ -228,6 +230,8 @@ export interface Translations {
     submissionDetails: string
     submittedAt: string
     reviewedAt: string
+    maxScore: string
+    skills: string
   }
   auth: {
     login: string
@@ -287,6 +291,7 @@ export const translations: Record<Language, Translations> = {
       analytics: 'Analytics',
       settings: 'Settings',
       tasks: 'Tasks',
+      profile: 'Profile',
       search: 'Search',
       add: 'Add',
       edit: 'Edit',
@@ -309,9 +314,10 @@ export const translations: Record<Language, Translations> = {
       completed: 'Completed',
       onHold: 'On Hold',
       dropped: 'Dropped',
-      appName: 'TraineeHub',
+      appName: 'Trainee Control Panel in New Vision',
       admin: 'ADMIN',
       teamLeader: 'TEAM LEADER',
+      teacher: 'TEACHER',
       trainee: 'TRAINEE',
       userManagement: 'User Management',
       select: 'Select',
@@ -504,6 +510,8 @@ export const translations: Record<Language, Translations> = {
       submissionDetails: 'Submission Details',
       submittedAt: 'Submitted At',
       reviewedAt: 'Reviewed At',
+      maxScore: 'Maximum Score',
+      skills: 'Skills',
     },
     auth: {
       login: 'Login',
@@ -561,6 +569,7 @@ export const translations: Record<Language, Translations> = {
       analytics: 'التحليلات',
       settings: 'الإعدادات',
       tasks: 'المهام',
+      profile: 'الملف الشخصي',
       search: 'بحث',
       add: 'إضافة',
       edit: 'تعديل',
@@ -583,9 +592,10 @@ export const translations: Record<Language, Translations> = {
       completed: 'مكتمل',
       onHold: 'معلق',
       dropped: 'منسحب',
-      appName: 'مركز التدريب',
+      appName: 'لوحه تحكم المتدربين في نيو فيشجن',
       admin: 'مدير',
       teamLeader: 'قائد فريق',
+      teacher: 'معلم',
       trainee: 'متدرب',
       userManagement: 'إدارة المستخدمين',
       select: 'اختر',
@@ -778,6 +788,8 @@ export const translations: Record<Language, Translations> = {
       submissionDetails: 'تفاصيل التقديم',
       submittedAt: 'تقدم في',
       reviewedAt: 'تمت المراجعة في',
+      maxScore: 'الدرجة القصوى',
+      skills: 'المهارات',
     },
     auth: {
       login: 'تسجيل الدخول',
@@ -785,7 +797,7 @@ export const translations: Record<Language, Translations> = {
       password: 'كلمة المرور',
       signIn: 'دخول',
       invalidCredentials: 'اسم المستخدم أو كلمة المرور غير صحيحة',
-      demoCredentials: 'بيانات تجريبية: admin / admin123',
+      demoCredentials:``,
       resetPassword: 'إعادة تعيين كلمة المرور',
       resetEmail: 'البريد الإلكتروني',
       resetEmailPlaceholder: 'بريدك@الإلكتروني.com',

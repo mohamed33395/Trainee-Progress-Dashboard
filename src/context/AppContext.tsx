@@ -4,6 +4,7 @@ import { Trainee, DailyReport, Teacher, LanguageLevel, Task, User, Notification 
 import { storageService } from '../services/storage'
 import { firestoreStorageService } from '../services/firestoreStorage'
 import { initializeMockData } from '../data/mockData'
+import { migrateToSeparateCollections, checkMigrationNeeded } from '../services/migrateToSeparateCollections'
 
 interface AppContextType {
   trainees: Trainee[]
@@ -59,6 +60,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
           // Initialize Firestore
           try {
             await firestoreStorageService.initializeData()
+            
+            // Check if migration is needed (old single-document structure)
+            const migrationNeeded = await checkMigrationNeeded()
+            if (migrationNeeded) {
+              console.log('Migration needed - running migration script...')
+              const migrationResult = await migrateToSeparateCollections()
+              if (migrationResult.success) {
+                console.log('Migration successful:', migrationResult.message)
+              } else {
+                console.error('Migration failed:', migrationResult.message)
+              }
+            }
+            
             // Always load existing data from Firebase - never overwrite
             const data = await firestoreStorageService.getAllData()
             setTrainees(data.trainees || [])

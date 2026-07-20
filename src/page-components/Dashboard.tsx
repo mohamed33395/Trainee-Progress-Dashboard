@@ -3,6 +3,7 @@ import { Users, TrendingUp, FileText, Activity } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts'
 import { Trainee, DailyReport } from '@/types'
 import { useLanguage } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
 
 interface DashboardProps {
   trainees: Trainee[]
@@ -13,12 +14,24 @@ const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'
 
 export function Dashboard({ trainees, reports }: DashboardProps) {
   const { t } = useLanguage()
-  const totalTrainees = trainees.length
-  const activeTrainees = trainees.filter(t => t.status === 'active').length
-  const averageProgress = trainees.length > 0 
-    ? Math.round(trainees.reduce((acc, t) => acc + t.progress, 0) / trainees.length)
+  const { user, isTrainee } = useAuth()
+  
+  // Filter data based on user role
+  const currentTrainee = isTrainee() && user?.traineeId 
+    ? trainees.find(t => t.id === user.traineeId)
+    : null
+  
+  const displayTrainees = currentTrainee ? [currentTrainee] : trainees
+  const displayReports = currentTrainee 
+    ? reports.filter(r => r.traineeId === currentTrainee.id)
+    : reports
+  
+  const totalTrainees = displayTrainees.length
+  const activeTrainees = displayTrainees.filter(t => t.status === 'active').length
+  const averageProgress = displayTrainees.length > 0 
+    ? Math.round(displayTrainees.reduce((acc, t) => acc + t.progress, 0) / displayTrainees.length)
     : 0
-  const completedReports = reports.length
+  const completedReports = displayReports.length
 
   // Weekly statistics
   const weeklyData = [
@@ -32,14 +45,14 @@ export function Dashboard({ trainees, reports }: DashboardProps) {
 
   // Status distribution
   const statusData = [
-    { name: t.common.active, value: trainees.filter(t => t.status === 'active').length },
-    { name: t.common.completed, value: trainees.filter(t => t.status === 'completed').length },
-    { name: t.common.onHold, value: trainees.filter(t => t.status === 'on-hold').length },
-    { name: t.common.dropped, value: trainees.filter(t => t.status === 'dropped').length },
+    { name: t.common.active, value: displayTrainees.filter(t => t.status === 'active').length },
+    { name: t.common.completed, value: displayTrainees.filter(t => t.status === 'completed').length },
+    { name: t.common.onHold, value: displayTrainees.filter(t => t.status === 'on-hold').length },
+    { name: t.common.dropped, value: displayTrainees.filter(t => t.status === 'dropped').length },
   ].filter(item => item.value > 0)
 
   // Progress trend
-  const progressData = trainees.slice(0, 5).map(t => ({
+  const progressData = displayTrainees.slice(0, 5).map(t => ({
     name: t.name.split(' ')[0],
     progress: t.progress,
   }))

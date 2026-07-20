@@ -11,6 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Filters } from '@/components/ui/Filters'
 import { TraineeForm } from '@/components/forms/TraineeForm'
 import { useLanguage } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
 
 interface TraineesProps {
   trainees: Trainee[]
@@ -29,6 +30,7 @@ const statusColors: Record<TraineeStatus, string> = {
 
 export function Trainees({ trainees, teachers, onTraineeDelete, onTraineeAdd, onTraineeUpdate }: TraineesProps) {
   const { t } = useLanguage()
+  const { user, isTrainee } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilters, setSelectedFilters] = useState<string[]>([])
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -41,7 +43,14 @@ export function Trainees({ trainees, teachers, onTraineeDelete, onTraineeAdd, on
     { value: 'dropped', label: t.common.dropped },
   ]
 
-  const filteredTrainees = trainees.filter(trainee => {
+  // Filter trainees based on user role
+  const currentTrainee = isTrainee() && user?.traineeId 
+    ? trainees.find(t => t.id === user.traineeId)
+    : null
+  
+  const displayTrainees = currentTrainee ? [currentTrainee] : trainees
+
+  const filteredTrainees = displayTrainees.filter(trainee => {
     const matchesSearch = trainee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          trainee.email.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesFilter = selectedFilters.length === 0 || selectedFilters.includes(trainee.status)

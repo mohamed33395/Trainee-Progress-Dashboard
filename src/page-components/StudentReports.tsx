@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Search, Download, ArrowLeft, Calendar, FileText } from 'lucide-react'
 import { useLanguage } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 
@@ -20,13 +21,21 @@ interface StudentReportsProps {
 
 export function StudentReports({ trainees, reports }: StudentReportsProps) {
   const { t } = useLanguage()
+  const { user, isTrainee } = useAuth()
   const params = useParams<{ id: string }>()
   const id = params?.id
   const [searchQuery, setSearchQuery] = useState('')
 
+  // Filter trainees based on user role
+  const currentTrainee = isTrainee() && user?.traineeId 
+    ? trainees.find(t => t.id === user.traineeId)
+    : null
+  
+  const displayTrainees = currentTrainee ? [currentTrainee] : trainees
+
   // If an ID is provided, show student detail view
   if (id) {
-    const trainee = trainees.find(t => t.id === id)
+    const trainee = displayTrainees.find(t => t.id === id)
     if (!trainee) {
       return (
         <div className="flex items-center justify-center h-96">
@@ -38,7 +47,7 @@ export function StudentReports({ trainees, reports }: StudentReportsProps) {
   }
 
   // Otherwise, show the student list
-  const filteredTrainees = trainees.filter(trainee =>
+  const filteredTrainees = displayTrainees.filter(trainee =>
     trainee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     trainee.email.toLowerCase().includes(searchQuery.toLowerCase())
   )
@@ -159,10 +168,29 @@ function StudentDetailView({ trainee, reports }: StudentDetailViewProps) {
     const doc = new jsPDF()
     let yPos = 20
 
-    // Header with title
-    doc.setFontSize(22)
+    // Company Header - Logo and Name Only
+    try {
+      doc.addImage('/img/logo.png', 'PNG', 20, yPos, 30, 30)
+    } catch (e) {
+      // If logo fails, continue without it
+    }
+    
+
+
+
+
+    yPos += 40
+
+    // Report Title
+    doc.setFontSize(18)
     doc.setTextColor(59, 130, 246)
     doc.text('Daily Progress Report', 105, yPos, { align: 'center' })
+    yPos += 10
+
+    // Separator Line
+    doc.setDrawColor(59, 130, 246)
+    doc.setLineWidth(0.5)
+    doc.line(20, yPos, 190, yPos)
     yPos += 15
 
     // Student photo and info table
@@ -331,11 +359,13 @@ function StudentDetailView({ trainee, reports }: StudentDetailViewProps) {
       margin: { left: 20, right: 20 },
     })
 
-    // Footer
+    // Footer with Company Contact Info
     const pageCount = doc.getNumberOfPages()
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i)
-      doc.setFontSize(10)
+
+      // Page Number
+      doc.setFontSize(9)
       doc.setTextColor(150, 150, 150)
       doc.text(
         `Generated on ${new Date().toLocaleDateString()} - Page ${i} of ${pageCount}`,
