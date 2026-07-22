@@ -335,7 +335,35 @@ class FirestoreStorageService {
 
   async addTask(task: Task): Promise<void> {
     try {
-      await setDoc(this.getDocRef(this.collections.tasks, task.id), task)
+      // Clean the task object before saving to Firebase
+      const cleanedTask: any = {
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        imageUrl: task.imageUrl,
+        assignedTraineeId: task.assignedTraineeId,
+        status: task.status,
+        createdAt: task.createdAt,
+        dueDate: task.dueDate || null,
+        skills: task.skills || null,
+        maxScore: task.maxScore || null,
+        submission: null
+      }
+
+      // Only add submission if it exists and has valid data
+      if (task.submission) {
+        cleanedTask.submission = {
+          codeSnippetImage: task.submission.codeSnippetImage || '',
+          projectImage: task.submission.projectImage || '',
+          details: task.submission.details || '',
+          instructorRating: task.submission.instructorRating || 0,
+          submittedAt: task.submission.submittedAt || new Date().toISOString(),
+          reviewedAt: task.submission.reviewedAt || null,
+          instructorFeedback: task.submission.instructorFeedback || null
+        }
+      }
+
+      await setDoc(this.getDocRef(this.collections.tasks, cleanedTask.id), cleanedTask)
     } catch (error) {
       console.error('Error adding task:', error)
       throw error
@@ -345,7 +373,28 @@ class FirestoreStorageService {
   async updateTask(id: string, updates: Partial<Task>): Promise<void> {
     try {
       const docRef = this.getDocRef(this.collections.tasks, id)
-      await updateDoc(docRef, updates)
+      
+      // Clean the updates object before saving to Firebase
+      const cleanedUpdates: any = {}
+      
+      for (const key in updates) {
+        if (key === 'submission' && updates[key]) {
+          // Clean submission object
+          cleanedUpdates[key] = {
+            codeSnippetImage: updates[key].codeSnippetImage || '',
+            projectImage: updates[key].projectImage || '',
+            details: updates[key].details || '',
+            instructorRating: updates[key].instructorRating || 0,
+            submittedAt: updates[key].submittedAt || new Date().toISOString(),
+            reviewedAt: updates[key].reviewedAt || null,
+            instructorFeedback: updates[key].instructorFeedback || null
+          }
+        } else if (updates[key] !== undefined) {
+          cleanedUpdates[key] = updates[key]
+        }
+      }
+      
+      await updateDoc(docRef, cleanedUpdates)
     } catch (error) {
       console.error('Error updating task:', error)
       throw error

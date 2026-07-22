@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import jsPDF from 'jspdf'
 import { Task, TaskStatus, Trainee } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -8,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { Plus, Upload, X, Eye, Trash2, Calendar } from 'lucide-react'
+import { Plus, Upload, X, Eye, Trash2, Calendar, Download } from 'lucide-react'
 import { useLanguage } from '@/context/LanguageContext'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
@@ -23,6 +24,7 @@ export function Tasks({ currentTraineeId }: TasksProps) {
   const { user, isTrainee, isTeamLeader } = useAuth()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isSubmissionOpen, setIsSubmissionOpen] = useState(false)
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useState<Task | undefined>()
   const [taskImage, setTaskImage] = useState<string | null>(null)
   const [taskImageFile, setTaskImageFile] = useState<File | null>(null)
@@ -196,6 +198,124 @@ export function Tasks({ currentTraineeId }: TasksProps) {
     }
   }
 
+  const handleDownloadPDF = async (task: Task) => {
+    if (!task.submission) return
+
+    const pdf = new jsPDF()
+    const trainee = trainees.find(t => t.id === task.assignedTraineeId)
+    
+    // Get instructor name from teachers list using assignedCoach ID
+    let instructorName = 'Team Leader'
+    if (trainee?.assignedCoach) {
+      const { teachers } = useApp()
+      const instructor = teachers.find(t => t.id === trainee.assignedCoach)
+      if (instructor) {
+        instructorName = instructor.name
+      }
+    }
+    
+    // Add company logo (placeholder - you can replace with actual logo)
+    pdf.setFontSize(20)
+    pdf.text('Trainee Progress Dashboard', 105, 20, { align: 'center' })
+    
+    // Add title
+    pdf.setFontSize(16)
+    pdf.text(`Task: ${task.title}`, 20, 40)
+    
+    // Add trainee information
+    pdf.setFontSize(12)
+    pdf.text(`Trainee: ${trainee?.name || 'Unknown'}`, 20, 55)
+    pdf.text(`Instructor: ${instructorName}`, 20, 65)
+    pdf.text(`Date: ${new Date(task.submission.submittedAt).toLocaleDateString()}`, 20, 75)
+    
+    // Add task description
+    pdf.text('Description:', 20, 90)
+    const descriptionLines = pdf.splitTextToSize(task.description, 170)
+    pdf.text(descriptionLines, 20, 100)
+    
+    let yPos = 100 + (descriptionLines.length * 7) + 10
+    
+    // Add trainee photo first if available
+    if (trainee?.avatar) {
+      try {
+        pdf.text('Trainee Photo:', 20, yPos)
+        yPos += 10
+        pdf.addImage(trainee.avatar, 'JPEG', 20, yPos, 40, 40)
+        yPos += 50
+      } catch (error) {
+        console.error('Error adding trainee photo to PDF:', error)
+        // Continue without the photo if there's an error
+      }
+    }
+    
+    // Add task image if available
+    if (task.imageUrl) {
+      try {
+        pdf.text('Task Image:', 20, yPos)
+        yPos += 10
+        pdf.addImage(task.imageUrl, 'JPEG', 20, yPos, 80, 60)
+        yPos += 70
+      } catch (error) {
+        console.error('Error adding task image to PDF:', error)
+      }
+    }
+    
+    // Add submission details
+    yPos += 10
+    pdf.text('Submission Details:', 20, yPos)
+    yPos += 10
+    pdf.text(`Rating: ${task.submission.instructorRating}/10`, 20, yPos)
+    yPos += 10
+    
+    // Add submission details text
+    pdf.text('Details:', 20, yPos)
+    yPos += 10
+    const detailsLines = pdf.splitTextToSize(task.submission.details, 170)
+    pdf.text(detailsLines, 20, yPos)
+    yPos += (detailsLines.length * 7) + 10
+    
+    // Add instructor feedback if available
+    if (task.submission.instructorFeedback) {
+      pdf.text('Instructor Feedback:', 20, yPos)
+      yPos += 10
+      const feedbackLines = pdf.splitTextToSize(task.submission.instructorFeedback, 170)
+      pdf.text(feedbackLines, 20, yPos)
+      yPos += (feedbackLines.length * 7) + 10
+    }
+    
+    // Add submission images
+    yPos += 50
+    if (yPos > 200) {
+      pdf.addPage()
+      yPos = 20
+    }
+    
+    pdf.text('Code Snippet Image:', 20, yPos)
+    yPos += 10
+    try {
+      pdf.addImage(task.submission.codeSnippetImage, 'JPEG', 20, yPos, 80, 60)
+    } catch (error) {
+      console.error('Error adding code snippet image to PDF:', error)
+    }
+    
+    yPos += 70
+    if (yPos > 200) {
+      pdf.addPage()
+      yPos = 20
+    }
+    
+    pdf.text('Project Image:', 20, yPos)
+    yPos += 10
+    try {
+      pdf.addImage(task.submission.projectImage, 'JPEG', 20, yPos, 80, 60)
+    } catch (error) {
+      console.error('Error adding project image to PDF:', error)
+    }
+    
+    // Save the PDF
+    pdf.save(`task-${task.title.replace(/\s+/g, '-')}.pdf`)
+  }
+
   const getStatusColor = (status: TaskStatus) => {
     switch (status) {
       case 'pending': return 'bg-yellow-500'
@@ -255,11 +375,21 @@ export function Tasks({ currentTraineeId }: TasksProps) {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2">
                       <Badge variant="outline" className="flex items-center gap-2">
                         <span className={`h-2 w-2 rounded-full ${getStatusColor(task.status)}`} />
                         {t.tasks[task.status as keyof typeof t.tasks] || task.status}
                       </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedTask(task)
+                          setIsDetailOpen(true)
+                        }}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
 
@@ -495,6 +625,128 @@ export function Tasks({ currentTraineeId }: TasksProps) {
             <Button onClick={handleAddTask}>
               {t.common.save}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Task Detail Dialog */}
+      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Task Details</DialogTitle>
+          </DialogHeader>
+          {selectedTask && (
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-xl font-semibold">{selectedTask.title}</h3>
+                  <p className="text-muted-foreground mt-2">{selectedTask.description}</p>
+                </div>
+                
+                {selectedTask.imageUrl && (
+                  <div>
+                    <Label className="text-base font-medium">Task Image</Label>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={selectedTask.imageUrl}
+                      alt={selectedTask.title}
+                      className="mt-2 rounded-lg w-full max-h-96 object-cover"
+                    />
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <Label className="text-muted-foreground">Status</Label>
+                    <p className="font-medium">{selectedTask.status}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Due Date</Label>
+                    <p className="font-medium">
+                      {selectedTask.dueDate ? new Date(selectedTask.dueDate).toLocaleDateString() : 'No due date'}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Assigned To</Label>
+                    <p className="font-medium">{getTraineeName(selectedTask.assignedTraineeId)}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Max Score</Label>
+                    <p className="font-medium">{selectedTask.maxScore || 10}</p>
+                  </div>
+                </div>
+                
+                {selectedTask.skills && selectedTask.skills.length > 0 && (
+                  <div>
+                    <Label className="text-base font-medium">Skills</Label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {selectedTask.skills.map(skill => (
+                        <Badge key={skill} variant="outline">{skill}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {selectedTask.submission && (
+                <div className="space-y-4 pt-4 border-t">
+                  <h4 className="text-lg font-semibold">Submission Details</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-muted-foreground">Code Snippet</Label>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={selectedTask.submission.codeSnippetImage}
+                        alt="Code Snippet"
+                        className="mt-2 rounded-lg w-full h-48 object-cover"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Project</Label>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={selectedTask.submission.projectImage}
+                        alt="Project"
+                        className="mt-2 rounded-lg w-full h-48 object-cover"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Details</Label>
+                    <p className="mt-2">{selectedTask.submission.details}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <Label className="text-muted-foreground">Rating</Label>
+                      <p className="font-medium">{selectedTask.submission.instructorRating}/10</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Submitted At</Label>
+                      <p className="font-medium">
+                        {new Date(selectedTask.submission.submittedAt).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                  {selectedTask.submission.instructorFeedback && (
+                    <div>
+                      <Label className="text-muted-foreground">Instructor Feedback</Label>
+                      <p className="mt-2">{selectedTask.submission.instructorFeedback}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDetailOpen(false)}>
+              {t.common.close}
+            </Button>
+            {selectedTask?.submission && (
+              <Button onClick={() => handleDownloadPDF(selectedTask)}>
+                <Download className="h-4 w-4 mr-2" />
+                Download PDF
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

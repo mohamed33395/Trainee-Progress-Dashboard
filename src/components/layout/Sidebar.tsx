@@ -13,7 +13,8 @@ import {
     Globe,
     ClipboardList,
     CheckSquare,
-    Shield
+    Shield,
+    Calendar
 } from 'lucide-react'
 import {cn} from '@/lib/utils'
 import {useState, useEffect} from 'react'
@@ -75,6 +76,12 @@ export function Sidebar() {
             href: '/student-reports',
             icon: ClipboardList,
             roles: ['admin', 'team_leader', 'teacher']
+        },
+        {
+            name: 'التقارير الأسبوعية',
+            href: '/weekly-reports',
+            icon: Calendar,
+            roles: ['admin', 'team_leader', 'teacher', 'trainee']
         },
         {name: t.common.analytics, href: '/analytics', icon: BarChart3, roles: ['admin', 'team_leader']},
         {name: t.common.userManagement, href: '/user-management', icon: Shield, roles: ['admin', 'team_leader']},

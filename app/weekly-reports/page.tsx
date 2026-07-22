@@ -1,0 +1,29 @@
+"use client"
+import { useAuth } from '@/context/AuthContext'
+import { WeeklyReports } from '@/page-components/WeeklyReports'
+import { Sidebar } from '@/components/layout/Sidebar'
+import { Header } from '@/components/layout/Header'
+import { Footer } from '@/components/layout/Footer'
+import { useApp } from '@/context/AppContext'
+
+export default function WeeklyReportsPage() {
+  const { isAuthenticated } = useAuth()
+  const { trainees, reports } = useApp()
+
+  if (!isAuthenticated) {
+    return null // Will be handled by redirect or login page
+  }
+
+  return (
+    <div className="flex min-h-screen bg-background">
+      <Sidebar />
+      <div className="flex-1 flex flex-col mr-72">
+        <Header />
+        <main className="flex-1 overflow-auto">
+          <WeeklyReports trainees={trainees} reports={reports} />
+        </main>
+        <Footer />
+      </div>
+    </div>
+  )
+}

@@ -19,6 +19,8 @@ const traineeSchema = z.object({
   startDate: z.string().min(1, 'Start date is required'),
   currentWeek: z.number().min(1, 'Week must be at least 1'),
   languageLevel: z.string().optional(),
+  age: z.number().optional(),
+  origin: z.string().optional(),
 })
 
 type TraineeFormData = z.infer<typeof traineeSchema>
@@ -49,6 +51,8 @@ export function TraineeForm({ isOpen, onClose, onSubmit, trainee, teachers = [] 
       status: trainee?.status || 'active',
       startDate: trainee?.startDate || new Date().toISOString().split('T')[0],
       currentWeek: trainee?.currentWeek || 1,
+      age: trainee?.age || undefined,
+      origin: trainee?.origin || '',
     },
   })
 
@@ -94,6 +98,8 @@ export function TraineeForm({ isOpen, onClose, onSubmit, trainee, teachers = [] 
       skillsProgress: selectedSkills,
       assignedCoach: selectedTeacher,
       languageLevel: (data.languageLevel || 'Intermediate') as 'Beginner' | 'Elementary' | 'Intermediate' | 'Upper-Intermediate' | 'Advanced' | 'Proficient',
+      age: data.age,
+      origin: data.origin,
     }
     onSubmit(traineeData)
     onClose()
@@ -188,6 +194,21 @@ export function TraineeForm({ isOpen, onClose, onSubmit, trainee, teachers = [] 
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="age">Age</Label>
+              <Input
+                id="age"
+                type="number"
+                min="1"
+                max="100"
+                {...register('age', { valueAsNumber: true })}
+                placeholder="25"
+              />
+              {errors.age && (
+                <p className="text-sm text-destructive">{errors.age.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="startDate">Start Date</Label>
               <Input
                 id="startDate"
@@ -209,6 +230,18 @@ export function TraineeForm({ isOpen, onClose, onSubmit, trainee, teachers = [] 
               />
               {errors.currentWeek && (
                 <p className="text-sm text-destructive">{errors.currentWeek.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="origin">Country/Origin</Label>
+              <Input
+                id="origin"
+                {...register('origin')}
+                placeholder="Egypt||soudi arabia"
+              />
+              {errors.origin && (
+                <p className="text-sm text-destructive">{errors.origin.message}</p>
               )}
             </div>
           </div>

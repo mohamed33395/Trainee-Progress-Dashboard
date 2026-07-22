@@ -4,7 +4,7 @@ export type TraineeStatus = 'active' | 'completed' | 'on-hold' | 'dropped'
 
 export type TeacherStatus = 'active' | 'inactive' | 'on-leave'
 
-export type NotificationType = 'daily_report_submitted' | 'task_submitted' | 'task_completed' | 'task_rejected'
+export type NotificationType = 'daily_report_submitted' | 'task_submitted' | 'task_completed' | 'task_rejected' | 'weekly_report'
 
 export type Topic = 
   | 'HTML'

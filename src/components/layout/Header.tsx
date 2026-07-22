@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { useApp } from '@/context/AppContext'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -20,12 +21,24 @@ export function Header() {
   const { user, logout } = useAuth()
   const { t, language, setLanguage } = useLanguage()
   const { notifications, markNotificationAsRead, deleteNotification } = useApp()
+  const router = useRouter()
   const [showNotifications, setShowNotifications] = useState(false)
 
   const unreadNotifications = notifications.filter(n => !n.isRead && n.recipientId === user?.id)
 
   const handleNotificationClick = (notificationId: string) => {
     markNotificationAsRead(notificationId)
+    const notification = notifications.find(n => n.id === notificationId)
+    if (notification) {
+      // Navigate based on notification type
+      if (notification.type === 'daily_report_submitted') {
+        router.push('/student-reports')
+      } else if (notification.type === 'task_submitted' || notification.type === 'task_completed' || notification.type === 'task_rejected') {
+        router.push('/tasks')
+      } else if (notification.type === 'weekly_report') {
+        router.push('/weekly-reports')
+      }
+    }
   }
 
   const handleDeleteNotification = (e: React.MouseEvent, notificationId: string) => {
@@ -119,17 +132,27 @@ export function Header() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button variant="ghost" size="icon" className="transition-all duration-200 hover:scale-110">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={() => router.push('/profile')}
+          className="transition-all duration-200 hover:scale-110"
+          title={t.common.profile}
+        >
           <User className="h-5 w-5" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
-          onClick={logout}
+          onClick={() => {
+            if (window.confirm(language === 'ar' ? 'هل أنت متأكد من تسجيل الخروج؟' : 'Are you sure you want to logout?')) {
+              logout()
+            }
+          }}
           className="transition-all duration-200 hover:scale-110"
           title={t.auth.logout}
         >
-          <LogOut className="h-5 w-5" />
+          <LogOut className={`h-5 w-5 ${language === 'ar' ? 'rotate-180' : ''}`} />
         </Button>
       </div>
     </header>

@@ -519,7 +519,7 @@ export const translations: Record<Language, Translations> = {
       password: 'Password',
       signIn: 'Sign In',
       invalidCredentials: 'Invalid username or password',
-      demoCredentials: 'Demo credentials: admin / admin123',
+      demoCredentials: '',
       resetPassword: 'Reset Password',
       resetEmail: 'Email',
       resetEmailPlaceholder: 'your@email.com',

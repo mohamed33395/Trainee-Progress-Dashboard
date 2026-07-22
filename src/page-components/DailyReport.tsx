@@ -32,7 +32,7 @@ const reportSchema = z.object({
   traineeId: z.string().min(1, 'Trainee is required'),
   date: z.string().min(1, 'Date is required'),
   week: z.number().min(1, 'Week must be at least 1'),
-  day: z.number().min(1).max(7, 'Day must be between 1 and 7'),
+  day: z.number().min(1).max(5, 'Day must be between 1 and 5'),
   topics: z.array(z.string()).min(1, 'Select at least one topic'),
   tasks: z.array(z.object({
     id: z.string(),
@@ -245,12 +245,12 @@ export function DailyReportForm({ trainees, onSaveReport }: DailyReportFormProps
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="day">{t.common.day}</Label>
+                <Label htmlFor="day">{t.common.day} (1-5, Friday & Saturday off)</Label>
                 <Input
                   id="day"
                   type="number"
                   min="1"
-                  max="7"
+                  max="5"
                   {...register('day', { valueAsNumber: true })}
                 />
                 {errors.day && (

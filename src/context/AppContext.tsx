@@ -251,6 +251,50 @@ export function AppProvider({ children }: { children: ReactNode }) {
         storageService.addNotification(notification)
       }
     }
+
+    // Send weekly report notification when day 5 is submitted (end of week)
+    if (report.day === 5) {
+      // Send to trainee
+      const traineeUser = users.find(u => u.traineeId === report.traineeId)
+      if (traineeUser) {
+        const weeklyNotification: Notification = {
+          id: Date.now().toString() + '-weekly-' + traineeUser.id,
+          type: 'weekly_report',
+          recipientId: traineeUser.id,
+          recipientRole: traineeUser.role,
+          title: 'Weekly Report Available',
+          message: `Your weekly report for Week ${report.week} is now available. Check your progress and skill shots.`,
+          relatedId: report.traineeId,
+          isRead: false,
+          createdAt: new Date().toISOString(),
+        }
+        if (useFirestore) {
+          await firestoreStorageService.addNotification(weeklyNotification)
+        } else {
+          storageService.addNotification(weeklyNotification)
+        }
+      }
+
+      // Also send to team leaders
+      for (const teamLeader of teamLeaders) {
+        const weeklyNotification: Notification = {
+          id: Date.now().toString() + '-weekly-' + teamLeader.id,
+          type: 'weekly_report',
+          recipientId: teamLeader.id,
+          recipientRole: teamLeader.role,
+          title: 'Weekly Report Completed',
+          message: `${trainee?.name || 'A trainee'} has completed Week ${report.week}. Weekly report is now available.`,
+          relatedId: report.traineeId,
+          isRead: false,
+          createdAt: new Date().toISOString(),
+        }
+        if (useFirestore) {
+          await firestoreStorageService.addNotification(weeklyNotification)
+        } else {
+          storageService.addNotification(weeklyNotification)
+        }
+      }
+    }
     
     await refreshData()
   }

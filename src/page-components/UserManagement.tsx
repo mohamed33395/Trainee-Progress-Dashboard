@@ -1,17 +1,16 @@
 import { useState, useEffect } from 'react'
-import { User, UserRole, RolePermissions } from '@/types'
+import { User, UserRole } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { Plus, Trash2, User as UserIcon, Edit, Cloud, Download, Upload, Shield } from 'lucide-react'
+import { Plus, Trash2, User as UserIcon, Edit, Cloud } from 'lucide-react'
 import { useLanguage } from '@/context/LanguageContext'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { storageService } from '@/services/storage'
-import { defaultPermissions, getPermissions, updatePermissions } from '@/lib/permissions'
 
 export function UserManagement() {
   const { t } = useLanguage()
@@ -22,11 +21,6 @@ export function UserManagement() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [showNewTraineeForm, setShowNewTraineeForm] = useState(false)
   const [isFirebaseConfigOpen, setIsFirebaseConfigOpen] = useState(false)
-  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
-  const [importFile, setImportFile] = useState<File | null>(null)
-  const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false)
-  const [selectedRoleForPermissions, setSelectedRoleForPermissions] = useState<UserRole | null>(null)
-  const [currentPermissions, setCurrentPermissions] = useState<RolePermissions | null>(null)
   
   const [firebaseConfig, setFirebaseConfig] = useState({
     apiKey: '',
@@ -125,107 +119,11 @@ export function UserManagement() {
     setNewTraineeData({ name: '', email: '' })
   }
 
-  const handleResetData = () => {
-    if (confirm('Are you sure you want to clear all data? This will delete all trainees, users, reports, and tasks from both localStorage and Firebase. This action cannot be undone.')) {
-      // Clear localStorage
-      storageService.clearAll()
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('firebase_configured')
-        localStorage.removeItem('firebase_config')
-      }
-      
-      // Clear Firebase data
-      if (useFirestore) {
-        import('@/services/firestoreStorage').then(({ firestoreStorageService }) => {
-          firestoreStorageService.clearAll().then(() => {
-            alert('All data cleared successfully!')
-            if (typeof window !== 'undefined') {
-              window.location.reload()
-            }
-          }).catch((error) => {
-            console.error('Error clearing Firebase data:', error)
-            alert('Local data cleared. Firebase data may need manual clearing.')
-            if (typeof window !== 'undefined') {
-              window.location.reload()
-            }
-          })
-        })
-      } else {
-        alert('All data cleared successfully!')
-        if (typeof window !== 'undefined') {
-          window.location.reload()
-        }
-      }
-    }
-  }
-
-  const handleClearFirebaseOnly = () => {
-    if (confirm('Are you sure you want to clear Firebase data only? This will fix the invalid data error while keeping your local data. This action cannot be undone.')) {
-      if (useFirestore) {
-        import('@/services/firestoreStorage').then(({ firestoreStorageService }) => {
-          firestoreStorageService.clearAll().then(() => {
-            alert('Firebase data cleared successfully! The page will reload.')
-            if (typeof window !== 'undefined') {
-              window.location.reload()
-            }
-          }).catch((error) => {
-            console.error('Error clearing Firebase data:', error)
-            alert('Failed to clear Firebase data. Please try again.')
-          })
-        })
-      } else {
-        alert('Firebase is not currently enabled.')
-      }
-    }
-  }
-
-  const handleEnableFirebase = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('firebase_configured', 'true')
-      alert('Firebase enabled! The app will now reload to use Firestore.')
-      window.location.reload()
-    }
-  }
-
-  // Auto-enable Firebase on component mount if not already enabled
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const firebaseConfigured = localStorage.getItem('firebase_configured')
-    if (!firebaseConfigured || firebaseConfigured === 'false') {
-      localStorage.setItem('firebase_configured', 'true')
-    }
-  }, [])
-
   const handleDisableFirebase = () => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('firebase_configured', 'false')
       alert('Firebase disabled! The app will now reload to use localStorage.')
       window.location.reload()
-    }
-  }
-
-  const handleOpenPermissions = (role: UserRole) => {
-    setSelectedRoleForPermissions(role)
-    setCurrentPermissions(getPermissions(role))
-    setIsPermissionsDialogOpen(true)
-  }
-
-  const handleSavePermissions = () => {
-    if (selectedRoleForPermissions && currentPermissions) {
-      updatePermissions(selectedRoleForPermissions, currentPermissions)
-      alert('Permissions updated successfully!')
-      setIsPermissionsDialogOpen(false)
-      setSelectedRoleForPermissions(null)
-      setCurrentPermissions(null)
-    }
-  }
-
-  const handleTogglePermission = (permission: keyof RolePermissions) => {
-    if (currentPermissions) {
-      setCurrentPermissions({
-        ...currentPermissions,
-        [permission]: !currentPermissions[permission]
-      })
     }
   }
 
@@ -296,64 +194,6 @@ export function UserManagement() {
     })
   }
 
-  const handleExport = async () => {
-    try {
-      let jsonData: string
-      if (useFirestore) {
-        const { firestoreStorageService } = await import('@/services/firestoreStorage')
-        jsonData = await firestoreStorageService.exportData()
-      } else {
-        jsonData = storageService.exportData()
-      }
-
-      // Create and download the file
-      const blob = new Blob([jsonData], { type: 'application/json' })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `trainee-progress-export-${new Date().toISOString().split('T')[0]}.json`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
-
-      alert('Data exported successfully!')
-    } catch (error) {
-      console.error('Error exporting data:', error)
-      alert('Failed to export data. Please try again.')
-    }
-  }
-
-  const handleImport = async () => {
-    if (!importFile) {
-      alert('Please select a file to import')
-      return
-    }
-
-    try {
-      const fileContent = await importFile.text()
-      
-      if (useFirestore) {
-        const { firestoreStorageService } = await import('@/services/firestoreStorage')
-        await firestoreStorageService.importData(fileContent)
-      } else {
-        storageService.importData(fileContent)
-      }
-
-      alert('Data imported successfully! The page will reload to reflect the changes.')
-      setIsImportDialogOpen(false)
-      setImportFile(null)
-      
-      // Reload the page to refresh the data
-      if (typeof window !== 'undefined') {
-        window.location.reload()
-      }
-    } catch (error) {
-      console.error('Error importing data:', error)
-      alert('Failed to import data. Please make sure the file is a valid export file.')
-    }
-  }
-
   const getTraineeName = (traineeId?: string) => {
     if (!traineeId) return '-'
     const trainee = trainees.find(t => t.id === traineeId)
@@ -377,48 +217,6 @@ export function UserManagement() {
           <p className="text-muted-foreground">{t.userManagement.subtitle}</p>
         </div>
         <div className="flex gap-2">
-          {isAdmin() && !useFirestore && (
-            <Button variant="outline" onClick={handleEnableFirebase}>
-              <Cloud className="h-4 w-4 mr-2" />
-              {t.userManagement.enableCloudStorage}
-            </Button>
-          )}
-          {isAdmin() && useFirestore && (
-            <Button variant="outline" onClick={handleDisableFirebase}>
-              <Cloud className="h-4 w-4 mr-2" />
-              {t.userManagement.disableCloudStorage}
-            </Button>
-          )}
-          {isAdmin() && useFirestore && (
-            <Button variant="outline" onClick={handleClearFirebaseOnly}>
-              <Cloud className="h-4 w-4 mr-2" />
-              Clear Firebase Only
-            </Button>
-          )}
-          {isAdmin() && (
-            <Button variant="outline" onClick={handleExport}>
-              <Download className="h-4 w-4 mr-2" />
-              Export Data
-            </Button>
-          )}
-          {isAdmin() && (
-            <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
-              <Upload className="h-4 w-4 mr-2" />
-              Import Data
-            </Button>
-          )}
-          {isAdmin() && (
-            <Button variant="destructive" onClick={handleResetData}>
-              <Trash2 className="h-4 w-4 mr-2" />
-              {t.userManagement.resetAllData}
-            </Button>
-          )}
-          {isAdmin() && (
-            <Button variant="outline" onClick={() => handleOpenPermissions('team_leader')}>
-              <Shield className="h-4 w-4 mr-2" />
-              Manage Permissions
-            </Button>
-          )}
           {(isAdmin() || isTeamLeader()) && (
             <Button onClick={() => setIsFormOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -792,201 +590,6 @@ export function UserManagement() {
               {t.common.cancel}
             </Button>
             <Button onClick={handleSaveFirebaseConfig}>
-              {t.common.save}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Import Data Dialog */}
-      <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Import Data</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="import-file">Select Export File</Label>
-              <Input
-                id="import-file"
-                type="file"
-                accept=".json"
-                onChange={(e) => setImportFile(e.target.files?.[0] || null)}
-              />
-            </div>
-            <div className="bg-muted p-3 rounded-lg text-sm">
-              <p className="font-medium mb-1">Instructions:</p>
-              <ul className="list-disc list-inside space-y-1">
-                <li>Select a JSON file exported from this application</li>
-                <li>This will replace all current data with the imported data</li>
-                <li>Make sure to export your current data before importing if needed</li>
-              </ul>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>
-              {t.common.cancel}
-            </Button>
-            <Button onClick={handleImport}>
-              Import
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Permissions Management Dialog */}
-      <Dialog open={isPermissionsDialogOpen} onOpenChange={setIsPermissionsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Manage Permissions - {selectedRoleForPermissions}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="bg-muted p-3 rounded-lg text-sm">
-              <p className="font-medium">Role: {selectedRoleForPermissions}</p>
-              <p className="text-muted-foreground">Configure what this role can access and do in the system.</p>
-            </div>
-            
-            {currentPermissions && (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <h3 className="font-medium text-sm">View Permissions</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { key: 'canViewDashboard', label: 'View Dashboard' },
-                      { key: 'canViewTrainees', label: 'View Trainees' },
-                      { key: 'canViewTeachers', label: 'View Teachers' },
-                      { key: 'canViewTasks', label: 'View Tasks' },
-                      { key: 'canViewDailyReports', label: 'View Daily Reports' },
-                      { key: 'canViewStudentReports', label: 'View Student Reports' },
-                      { key: 'canViewAnalytics', label: 'View Analytics' },
-                      { key: 'canViewUserManagement', label: 'View User Management' },
-                      { key: 'canViewSettings', label: 'View Settings' },
-                    ].map((perm) => (
-                      <div key={perm.key} className="flex items-center justify-between p-2 border rounded">
-                        <span className="text-sm">{perm.label}</span>
-                        <input
-                          type="checkbox"
-                          checked={currentPermissions[perm.key as keyof RolePermissions]}
-                          onChange={() => handleTogglePermission(perm.key as keyof RolePermissions)}
-                          className="h-4 w-4"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h3 className="font-medium text-sm">Trainee Management</h3>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { key: 'canAddTrainees', label: 'Add Trainees' },
-                      { key: 'canEditTrainees', label: 'Edit Trainees' },
-                      { key: 'canDeleteTrainees', label: 'Delete Trainees' },
-                    ].map((perm) => (
-                      <div key={perm.key} className="flex items-center justify-between p-2 border rounded">
-                        <span className="text-sm">{perm.label}</span>
-                        <input
-                          type="checkbox"
-                          checked={currentPermissions[perm.key as keyof RolePermissions]}
-                          onChange={() => handleTogglePermission(perm.key as keyof RolePermissions)}
-                          className="h-4 w-4"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h3 className="font-medium text-sm">Teacher Management</h3>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { key: 'canAddTeachers', label: 'Add Teachers' },
-                      { key: 'canEditTeachers', label: 'Edit Teachers' },
-                      { key: 'canDeleteTeachers', label: 'Delete Teachers' },
-                    ].map((perm) => (
-                      <div key={perm.key} className="flex items-center justify-between p-2 border rounded">
-                        <span className="text-sm">{perm.label}</span>
-                        <input
-                          type="checkbox"
-                          checked={currentPermissions[perm.key as keyof RolePermissions]}
-                          onChange={() => handleTogglePermission(perm.key as keyof RolePermissions)}
-                          className="h-4 w-4"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h3 className="font-medium text-sm">Task Management</h3>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { key: 'canAddTasks', label: 'Add Tasks' },
-                      { key: 'canEditTasks', label: 'Edit Tasks' },
-                      { key: 'canDeleteTasks', label: 'Delete Tasks' },
-                      { key: 'canReviewTasks', label: 'Review Tasks' },
-                    ].map((perm) => (
-                      <div key={perm.key} className="flex items-center justify-between p-2 border rounded">
-                        <span className="text-sm">{perm.label}</span>
-                        <input
-                          type="checkbox"
-                          checked={currentPermissions[perm.key as keyof RolePermissions]}
-                          onChange={() => handleTogglePermission(perm.key as keyof RolePermissions)}
-                          className="h-4 w-4"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h3 className="font-medium text-sm">Report Management</h3>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { key: 'canAddDailyReports', label: 'Add Daily Reports' },
-                      { key: 'canEditDailyReports', label: 'Edit Daily Reports' },
-                      { key: 'canDeleteDailyReports', label: 'Delete Daily Reports' },
-                    ].map((perm) => (
-                      <div key={perm.key} className="flex items-center justify-between p-2 border rounded">
-                        <span className="text-sm">{perm.label}</span>
-                        <input
-                          type="checkbox"
-                          checked={currentPermissions[perm.key as keyof RolePermissions]}
-                          onChange={() => handleTogglePermission(perm.key as keyof RolePermissions)}
-                          className="h-4 w-4"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h3 className="font-medium text-sm">System Management</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { key: 'canManageUsers', label: 'Manage Users' },
-                      { key: 'canManagePermissions', label: 'Manage Permissions' },
-                    ].map((perm) => (
-                      <div key={perm.key} className="flex items-center justify-between p-2 border rounded">
-                        <span className="text-sm">{perm.label}</span>
-                        <input
-                          type="checkbox"
-                          checked={currentPermissions[perm.key as keyof RolePermissions]}
-                          onChange={() => handleTogglePermission(perm.key as keyof RolePermissions)}
-                          className="h-4 w-4"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsPermissionsDialogOpen(false)}>
-              {t.common.cancel}
-            </Button>
-            <Button onClick={handleSavePermissions}>
               {t.common.save}
             </Button>
           </DialogFooter>
