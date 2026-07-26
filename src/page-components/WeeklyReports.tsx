@@ -5,9 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Calendar, TrendingUp, Target, ChevronLeft, ChevronRight, Download, Save, FileText, Sparkles } from 'lucide-react'
+import { Calendar, TrendingUp, Target, ChevronLeft, ChevronRight, Download, FileText, Sparkles } from 'lucide-react'
 import { DailyReport, Topic, Trainee } from '@/types'
-import { useLanguage } from '@/context/LanguageContext'
 import { useAuth } from '@/context/AuthContext'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
@@ -18,7 +17,6 @@ interface WeeklyReportsProps {
 }
 
 export function WeeklyReports({ trainees, reports }: WeeklyReportsProps) {
-  const { t } = useLanguage()
   const { user, isTrainee } = useAuth()
   const [selectedWeek, setSelectedWeek] = useState(1)
   const [selectedTraineeId, setSelectedTraineeId] = useState<string | null>(null)
@@ -199,8 +197,25 @@ export function WeeklyReports({ trainees, reports }: WeeklyReportsProps) {
 
     yPos = (doc as any).lastAutoTable.finalY + 15
 
+    if (selectedTrainee.skillsProgress && Object.keys(selectedTrainee.skillsProgress).length > 0) {
+      autoTable(doc, {
+        startY: yPos,
+        head: [['Skill', 'Progress']],
+        body: Object.entries(selectedTrainee.skillsProgress).map(([skill, progress]) => [skill, `${progress}%`]),
+        theme: 'grid',
+        headStyles: { fillColor: [236, 72, 153], textColor: 255, fontStyle: 'bold' },
+        columnStyles: {
+          0: { cellWidth: 90 },
+          1: { cellWidth: 40, halign: 'center' },
+        },
+        margin: { left: 20, right: 20 },
+      })
+
+      yPos = (doc as any).lastAutoTable.finalY + 15
+    }
+
     // Five-Day Reports
-    weeklyReports.forEach((report, index) => {
+    weeklyReports.forEach((report) => {
       if (yPos > 250) {
         doc.addPage()
         yPos = 20
@@ -315,11 +330,11 @@ export function WeeklyReports({ trainees, reports }: WeeklyReportsProps) {
   }
 
   return (
-    <div className="space-y-6 p-6 bg-gradient-to-br from-blue-900/10 to-purple-900/10 min-h-screen">
+    <div className="space-y-6 p-6 bg-gradient-to-br from-indigo-950/10 via-purple-950/10  min-h-screen">
       {/* Header Section */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-purple-900 to-blue-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-indigo-950 via-purple-700 to-pink-500 bg-clip-text text-transparent">
             التقارير الأسبوعية
           </h1>
           <p className="text-purple-200 mt-2">
@@ -330,7 +345,7 @@ export function WeeklyReports({ trainees, reports }: WeeklyReportsProps) {
           <div className="flex gap-2">
             <Button 
               onClick={downloadWeeklyReport}
-              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+              className="bg-gradient-to-r from-indigo-950 via-purple-700 to-pink-500 hover:from-purple-800 hover:to-pink-600"
             >
               <Download className="h-4 w-4 mr-2" />
               تحميل PDF
@@ -341,8 +356,8 @@ export function WeeklyReports({ trainees, reports }: WeeklyReportsProps) {
 
       {/* Trainee Selection */}
       {!currentTrainee && (
-        <Card className="border-2 border-purple-300/50 shadow-lg bg-gradient-to-br from-purple-900/20 to-blue-900/20 backdrop-blur-sm">
-          <CardHeader className="bg-gradient-to-r from-purple-500/30 to-blue-500/30">
+        <Card className="border-2 border-purple-300/50 shadow-lg bg-purple-900/20 backdrop-blur-sm">
+          <CardHeader className="bg-purple-300/10 ">
             <CardTitle className="text-xl flex items-center gap-2 text-purple-100">
               <Sparkles className="h-5 w-5 text-purple-300" />
               اختيار المتدرب
@@ -356,7 +371,7 @@ export function WeeklyReports({ trainees, reports }: WeeklyReportsProps) {
                   variant={selectedTraineeId === trainee.id ? 'default' : 'outline'}
                   className={`cursor-pointer px-4 py-2 text-sm transition-all duration-200 ${
                     selectedTraineeId === trainee.id 
-                      ? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white' 
+                      ? 'bg-gradient-to-r from-indigo-950 via-purple-700 to-pink-500 hover:from-purple-800 hover:to-pink-600 text-white' 
                       : 'hover:bg-purple-500/30 text-purple-200 border-purple-400/50'
                   }`}
                   onClick={() => setSelectedTraineeId(trainee.id)}
@@ -372,8 +387,8 @@ export function WeeklyReports({ trainees, reports }: WeeklyReportsProps) {
       {selectedTrainee && (
         <>
           {/* Week Selection */}
-          <Card className="border-2 border-purple-300/50 shadow-lg bg-gradient-to-br from-purple-900/20 to-blue-900/20 backdrop-blur-sm">
-            <CardHeader className="bg-gradient-to-r from-purple-500/30 to-blue-500/30">
+          <Card className="border-2 border-purple-300/50 shadow-lg bg-purple-900/20  backdrop-blur-sm">
+            <CardHeader className="bg-purple-300/10 ">
               <CardTitle className="text-xl flex items-center justify-between text-purple-100">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-5 w-5 text-purple-300" />
@@ -409,7 +424,7 @@ export function WeeklyReports({ trainees, reports }: WeeklyReportsProps) {
                     variant={selectedWeek === week ? 'default' : 'outline'}
                     className={`cursor-pointer px-4 py-2 text-sm transition-all duration-200 ${
                       selectedWeek === week 
-                        ? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white' 
+                        ? 'bg-gradient-to-r from-indigo-950 via-purple-700 to-pink-500 hover:from-purple-800 hover:to-pink-600 text-white' 
                         : 'hover:bg-purple-500/30 text-purple-200 border-purple-400/50'
                     }`}
                     onClick={() => setSelectedWeek(week)}
@@ -422,12 +437,12 @@ export function WeeklyReports({ trainees, reports }: WeeklyReportsProps) {
           </Card>
 
           <Tabs defaultValue="weekly-summary" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 h-12 bg-gradient-to-r from-purple-500/30 to-blue-500/30 border-purple-300/50">
-              <TabsTrigger value="weekly-summary" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white text-purple-200">
+            <TabsList className="grid w-full grid-cols-2 h-12 bg-purple-500/30  border-purple-300/50">
+              <TabsTrigger value="weekly-summary" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-500 data-[state=active]:text-white text-purple-200">
                 <TrendingUp className="h-4 w-4 mr-2" />
                 ملخص الأسبوع
               </TabsTrigger>
-              <TabsTrigger value="skill-shots" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-blue-500 data-[state=active]:text-white text-purple-200">
+              <TabsTrigger value="skill-shots" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white text-purple-200">
                 <Target className="h-4 w-4 mr-2" />
                 المهارات غير المستخدمة
               </TabsTrigger>
@@ -436,8 +451,8 @@ export function WeeklyReports({ trainees, reports }: WeeklyReportsProps) {
             <TabsContent value="weekly-summary" className="space-y-6 mt-6">
               {/* Weekly Averages */}
               {weeklyAverages ? (
-                <Card className="border-2 border-purple-300/50 shadow-xl bg-gradient-to-br from-purple-900/20 to-blue-900/20 backdrop-blur-sm">
-                  <CardHeader className="bg-gradient-to-r from-purple-500/30 to-blue-500/30">
+                <Card className="border-2 border-purple-300/50 shadow-xl bg-purple-900/20  backdrop-blur-sm">
+                  <CardHeader className="bg-purple-300/10 ">
                     <CardTitle className="text-xl flex items-center gap-2 text-purple-100">
                       <TrendingUp className="h-6 w-6 text-purple-300" />
                       ملخص الأداء الأسبوعي
@@ -446,35 +461,35 @@ export function WeeklyReports({ trainees, reports }: WeeklyReportsProps) {
                   <CardContent>
                     <div className="space-y-6">
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="text-center p-6 bg-gradient-to-br from-purple-500/30 to-blue-500/30 rounded-xl border-2 border-purple-400/50 hover:shadow-lg transition-shadow">
+                        <div className="text-center p-6 bg-purple-200/10  rounded-xl border-2 border-purple-400/50 hover:shadow-lg transition-shadow">
                           <div className="text-3xl font-bold text-purple-200">{weeklyAverages.understanding}/10</div>
                           <div className="text-sm text-purple-300 mt-2">الفهم</div>
                         </div>
-                        <div className="text-center p-6 bg-gradient-to-br from-purple-600/40 to-blue-600/40 rounded-xl border-2 border-purple-500/50 hover:shadow-lg transition-shadow">
+                        <div className="text-center p-6 bg-purple-200/10  rounded-xl border-2 border-purple-500/50 hover:shadow-lg transition-shadow">
                           <div className="text-3xl font-bold text-purple-100">{weeklyAverages.codingSkills}/10</div>
                           <div className="text-sm text-purple-300 mt-2">مهارات البرمجة</div>
                         </div>
-                        <div className="text-center p-6 bg-gradient-to-br from-purple-700/50 to-blue-700/50 rounded-xl border-2 border-purple-600/50 hover:shadow-lg transition-shadow">
+                        <div className="text-center p-6 bg-purple-200/10  rounded-xl border-2 border-purple-600/50 hover:shadow-lg transition-shadow">
                           <div className="text-3xl font-bold text-purple-50">{weeklyAverages.problemSolving}/10</div>
                           <div className="text-sm text-purple-200 mt-2">حل المشكلات</div>
                         </div>
-                        <div className="text-center p-6 bg-gradient-to-br from-purple-800/60 to-blue-800/60 rounded-xl border-2 border-purple-700/50 hover:shadow-lg transition-shadow">
+                        <div className="text-center p-6 bg-purple-100/10  rounded-xl border-2 border-purple-700/50 hover:shadow-lg transition-shadow">
                           <div className="text-3xl font-bold text-white">{weeklyAverages.debugging}/10</div>
                           <div className="text-sm text-purple-100 mt-2">تصحيح الأخطاء</div>
                         </div>
-                        <div className="text-center p-6 bg-gradient-to-br from-purple-900/70 to-blue-900/70 rounded-xl border-2 border-purple-800/50 hover:shadow-lg transition-shadow">
+                        <div className="text-center p-6 bg-purple-100/10  rounded-xl border-2 border-purple-800/50 hover:shadow-lg transition-shadow">
                           <div className="text-3xl font-bold text-white">{weeklyAverages.communication}/10</div>
                           <div className="text-sm text-purple-100 mt-2">التواصل</div>
                         </div>
-                        <div className="text-center p-6 bg-gradient-to-br from-indigo-900/80 to-blue-900/80 rounded-xl border-2 border-indigo-800/50 hover:shadow-lg transition-shadow">
+                        <div className="text-center p-6 bg-purple-100/10  rounded-xl border-2 border-indigo-800/50 hover:shadow-lg transition-shadow">
                           <div className="text-3xl font-bold text-white">{weeklyAverages.codeQuality}/10</div>
                           <div className="text-sm text-purple-100 mt-2">جودة الكود</div>
                         </div>
-                        <div className="text-center p-6 bg-gradient-to-br from-blue-900/90 to-indigo-900/90 rounded-xl border-2 border-blue-800/50 hover:shadow-lg transition-shadow">
+                        <div className="text-center p-6 bg-purple-100/10  rounded-xl border-2 border-pink-400/50 hover:shadow-lg transition-shadow">
                           <div className="text-3xl font-bold text-white">{weeklyAverages.attendance}/10</div>
                           <div className="text-sm text-purple-100 mt-2">الحضور</div>
                         </div>
-                        <div className="text-center p-6 bg-gradient-to-br from-blue-950 to-indigo-950 rounded-xl border-2 border-blue-900/50 hover:shadow-lg transition-shadow">
+                        <div className="text-center p-6 bg-purple-100/10  rounded-xl border-2 border-pink-500/50 hover:shadow-lg transition-shadow">
                           <div className="text-3xl font-bold text-white">{weeklyAverages.overallProgress}%</div>
                           <div className="text-sm text-purple-100 mt-2">التقدم العام</div>
                         </div>
@@ -483,7 +498,7 @@ export function WeeklyReports({ trainees, reports }: WeeklyReportsProps) {
                   </CardContent>
                 </Card>
               ) : (
-                <Card className="border-2 border-purple-300/50 bg-gradient-to-br from-purple-900/20 to-blue-900/20 backdrop-blur-sm">
+                <Card className="border-2 border-purple-300/50 bg-purple-900/20 backdrop-blur-sm">
                   <CardContent className="py-12">
                     <div className="text-center">
                       <FileText className="h-16 w-16 mx-auto text-purple-400 mb-4" />
@@ -495,9 +510,34 @@ export function WeeklyReports({ trainees, reports }: WeeklyReportsProps) {
                 </Card>
               )}
 
+              {/* Trainee Skills Progress */}
+              {selectedTrainee.skillsProgress && Object.keys(selectedTrainee.skillsProgress).length > 0 && (
+                <Card className="border-2 border-purple-300/50 shadow-xl bg-purple-900/20 backdrop-blur-sm">
+                  <CardHeader className="bg-purple-300/10 ">
+                    <CardTitle className="text-xl flex items-center gap-2 text-purple-100">
+                      <Sparkles className="h-6 w-6 text-pink-300" />
+                      مهارات المتدرب
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {Object.entries(selectedTrainee.skillsProgress).map(([skill, progress]) => (
+                        <div key={skill} className="p-4 rounded-xl border border-purple-400/50 bg-purple-500/10 space-y-3">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="font-semibold text-purple-100 capitalize">{skill}</span>
+                            <span className="font-bold text-pink-200">{progress}%</span>
+                          </div>
+                          <Progress value={progress} className="h-2 bg-purple-950/50" />
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Five-Day Report */}
-              <Card className="border-2 border-purple-300/50 shadow-xl bg-gradient-to-br from-purple-900/20 to-blue-900/20 backdrop-blur-sm">
-                <CardHeader className="bg-gradient-to-r from-purple-500/30 to-blue-500/30">
+              <Card className="border-2 border-purple-300/50 shadow-xl bg-purple-900/20  backdrop-blur-sm">
+                <CardHeader className="bg-purple-300/10 ">
                   <CardTitle className="text-xl flex items-center gap-2 text-purple-100">
                     <FileText className="h-6 w-6 text-purple-300" />
                     التقرير اليومي (خمسة أيام)
@@ -513,11 +553,11 @@ export function WeeklyReports({ trainees, reports }: WeeklyReportsProps) {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {weeklyReports.map((report, index) => (
-                        <div key={report.id} className="border-2 border-purple-400/50 rounded-xl p-6 hover:shadow-lg transition-shadow bg-gradient-to-r from-purple-500/20 to-blue-500/20 backdrop-blur-sm">
+                      {weeklyReports.map((report) => (
+                        <div key={report.id} className="border-2 border-purple-400/50 rounded-xl p-6 hover:shadow-lg transition-shadow bg-purple-300/10  backdrop-blur-sm">
                           <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-3">
-                              <div className="p-2 bg-purple-500/30 rounded-lg">
+                              <div className="p-2 bg-purple-300/10 rounded-lg">
                                 <Calendar className="h-5 w-5 text-purple-300" />
                               </div>
                               <div>
@@ -531,8 +571,8 @@ export function WeeklyReports({ trainees, reports }: WeeklyReportsProps) {
                               variant={report.overallProgress >= 80 ? 'default' : 'secondary'}
                               className={`px-4 py-2 text-sm ${
                                 report.overallProgress >= 80 
-                                  ? 'bg-gradient-to-r from-purple-600 to-blue-600' 
-                                  : 'bg-gradient-to-r from-purple-500 to-blue-500'
+                                  ? 'bg-gradient-to-r from-indigo-950 via-purple-700 to-pink-500' 
+                                  : 'bg-gradient-to-r from-purple-700 to-pink-500'
                               }`}
                             >
                               {report.overallProgress}%
@@ -574,9 +614,9 @@ export function WeeklyReports({ trainees, reports }: WeeklyReportsProps) {
                                 <span className="font-semibold text-sm text-purple-200">نقاط القوة:</span>
                                 <p className="text-sm text-purple-300 mt-1">{report.strengths}</p>
                               </div>
-                              <div className="p-3 bg-blue-500/20 rounded-lg border border-blue-400/50">
-                                <span className="font-semibold text-sm text-blue-200">جوانب التحسين:</span>
-                                <p className="text-sm text-blue-300 mt-1">{report.needsImprovement}</p>
+                              <div className="p-3 bg-pink-500/20 rounded-lg border border-pink-400/50">
+                                <span className="font-semibold text-sm text-pink-200">جوانب التحسين:</span>
+                                <p className="text-sm text-pink-200/80 mt-1">{report.needsImprovement}</p>
                               </div>
                             </div>
                           </div>
@@ -589,8 +629,8 @@ export function WeeklyReports({ trainees, reports }: WeeklyReportsProps) {
             </TabsContent>
 
             <TabsContent value="skill-shots" className="space-y-6 mt-6">
-              <Card className="border-2 border-purple-300/50 shadow-xl bg-gradient-to-br from-purple-900/20 to-blue-900/20 backdrop-blur-sm">
-                <CardHeader className="bg-gradient-to-r from-purple-500/30 to-blue-500/30">
+              <Card className="border-2 border-purple-300/50 shadow-xl bg-purple-300/10  backdrop-blur-sm">
+                <CardHeader className="bg-purple-300/10 to-pink-500/30">
                   <CardTitle className="text-xl flex items-center gap-2 text-purple-100">
                     <Target className="h-6 w-6 text-purple-300" />
                     المهارات غير المستخدمة هذا الأسبوع
@@ -617,7 +657,7 @@ export function WeeklyReports({ trainees, reports }: WeeklyReportsProps) {
                         {skillShots.map(skill => (
                           <div
                             key={skill}
-                            className="p-6 border-2 border-dashed border-purple-400/50 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-xl text-center hover:shadow-lg transition-shadow backdrop-blur-sm"
+                            className="p-6 border-2 border-dashed border-purple-400/50 bg-purple-300/10 to-pink-500/20 rounded-xl text-center hover:shadow-lg transition-shadow backdrop-blur-sm"
                           >
                             <Badge variant="outline" className="mb-3 bg-purple-500/30 border-purple-400/50 text-purple-200 px-4 py-2">
                               {skill}
@@ -629,14 +669,14 @@ export function WeeklyReports({ trainees, reports }: WeeklyReportsProps) {
                     )}
 
                     {weeklyReports.length > 0 && (
-                      <div className="p-6 bg-gradient-to-br from-purple-500/30 to-blue-500/30 rounded-xl border-2 border-purple-400/50 backdrop-blur-sm">
+                      <div className="p-6 bg-purple-300/10  rounded-xl border-2 border-purple-400/50 backdrop-blur-sm">
                         <h4 className="font-bold text-purple-200 mb-4 flex items-center gap-2">
                           <Sparkles className="h-5 w-5 text-purple-300" />
                           المهارات التي تم تغطيتها هذا الأسبوع:
                         </h4>
                         <div className="flex flex-wrap gap-3">
                           {Array.from(new Set(weeklyReports.flatMap(r => r.topics))).map(topic => (
-                            <Badge key={topic} className="bg-gradient-to-r from-purple-600 to-blue-600 px-4 py-2">
+                            <Badge key={topic} className="bg-gradient-to-r from-indigo-950 via-purple-700 to-pink-500 px-4 py-2">
                               {topic}
                             </Badge>
                           ))}

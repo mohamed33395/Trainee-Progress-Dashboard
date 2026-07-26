@@ -7,7 +7,7 @@ import { Analytics } from '@/page-components/Analytics'
 import { useApp } from '@/context/AppContext'
 
 export default function AnalyticsPage() {
-  const { trainees, reports } = useApp()
+  const { trainees, reports, tasks, users } = useApp()
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -15,7 +15,7 @@ export default function AnalyticsPage() {
       <div className="flex-1 flex flex-col mr-72">
         <Header />
         <main className="flex-1 p-6 overflow-auto">
-          <Analytics trainees={trainees} reports={reports} />
+          <Analytics trainees={trainees} reports={reports} tasks={tasks} users={users} />
         </main>
         <Footer />
       </div>

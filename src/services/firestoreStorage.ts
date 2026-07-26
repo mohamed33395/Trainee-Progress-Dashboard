@@ -13,6 +13,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { Trainee, DailyReport, Teacher, Task, User, Notification } from '@/types'
+import { firebaseStorageService } from './firebaseStorage'
 
 // Convert Firestore Timestamp to ISO string
 const timestampToISO = (timestamp: any): string => {
@@ -303,10 +304,12 @@ class FirestoreStorageService {
   async getTasks(): Promise<Task[]> {
     try {
       const querySnapshot = await getDocs(this.getCollectionRef(this.collections.tasks))
-      return querySnapshot.docs.map(doc => doc.data() as Task)
+      const tasks = querySnapshot.docs.map(doc => doc.data() as Task)
+      console.log(`Retrieved ${tasks.length} tasks from Firestore`)
+      return tasks
     } catch (error) {
-      console.error('Error getting tasks:', error)
-      return []
+      console.error('Error getting tasks from Firestore:', error)
+      throw new Error(`Failed to get tasks: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -326,21 +329,46 @@ class FirestoreStorageService {
     try {
       const docRef = this.getDocRef(this.collections.tasks, id)
       const docSnap = await getDoc(docRef)
-      return docSnap.exists() ? (docSnap.data() as Task) : null
-    } catch (error) {
-      console.error('Error getting task by id:', error)
+      if (docSnap.exists()) {
+        console.log(`Retrieved task ${id} from Firestore`)
+        return docSnap.data() as Task
+      }
+      console.warn(`Task ${id} not found in Firestore`)
       return null
+    } catch (error) {
+      console.error('Error getting task by id from Firestore:', error)
+      throw new Error(`Failed to get task by id: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
-  async addTask(task: Task): Promise<void> {
+  async addTask(task: Task, taskImageFile?: File): Promise<void> {
     try {
+      let imageUrl = task.imageUrl
+
+      // If image file is provided, upload it to Firebase Storage
+      if (taskImageFile) {
+        try {
+          const imagePath = `tasks/${task.id}/task-image-${Date.now()}`
+          imageUrl = await firebaseStorageService.uploadImage(taskImageFile, imagePath)
+          console.log('Task image uploaded successfully:', imageUrl)
+        } catch (uploadError) {
+          console.error('Failed to upload task image:', uploadError)
+          // Don't throw error - allow task creation without image
+          imageUrl = ''
+        }
+      } else if (imageUrl && imageUrl.startsWith('data:')) {
+        // If it's a base64 string, we need to handle it
+        console.warn('Base64 image detected - this should be uploaded to Firebase Storage')
+        // For now, clear it to avoid document size issues
+        imageUrl = ''
+      }
+
       // Clean the task object before saving to Firebase
       const cleanedTask: any = {
         id: task.id,
         title: task.title,
         description: task.description,
-        imageUrl: task.imageUrl,
+        imageUrl: imageUrl,
         assignedTraineeId: task.assignedTraineeId,
         status: task.status,
         createdAt: task.createdAt,
@@ -352,25 +380,34 @@ class FirestoreStorageService {
 
       // Only add submission if it exists and has valid data
       if (task.submission) {
-        cleanedTask.submission = {
-          codeSnippetImage: task.submission.codeSnippetImage || '',
-          projectImage: task.submission.projectImage || '',
+        const submissionData: any = {
           details: task.submission.details || '',
           instructorRating: task.submission.instructorRating || 0,
           submittedAt: task.submission.submittedAt || new Date().toISOString(),
           reviewedAt: task.submission.reviewedAt || null,
           instructorFeedback: task.submission.instructorFeedback || null
         }
+        
+        // Only include image URLs if they are valid (not base64 and not blob URLs)
+        if (task.submission.codeSnippetImage && !task.submission.codeSnippetImage.startsWith('data:') && !task.submission.codeSnippetImage.startsWith('blob:')) {
+          submissionData.codeSnippetImage = task.submission.codeSnippetImage
+        }
+        if (task.submission.projectImage && !task.submission.projectImage.startsWith('data:') && !task.submission.projectImage.startsWith('blob:')) {
+          submissionData.projectImage = task.submission.projectImage
+        }
+        
+        cleanedTask.submission = submissionData
       }
 
       await setDoc(this.getDocRef(this.collections.tasks, cleanedTask.id), cleanedTask)
+      console.log('Task added successfully to Firestore')
     } catch (error) {
-      console.error('Error adding task:', error)
-      throw error
+      console.error('Error adding task to Firestore:', error)
+      throw new Error(`Failed to add task: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
-  async updateTask(id: string, updates: Partial<Task>): Promise<void> {
+  async updateTask(id: string, updates: Partial<Task>, codeSnippetFile?: File, projectFile?: File): Promise<void> {
     try {
       const docRef = this.getDocRef(this.collections.tasks, id)
       
@@ -379,34 +416,89 @@ class FirestoreStorageService {
       
       for (const key in updates) {
         if (key === 'submission' && updates[key]) {
-          // Clean submission object
-          cleanedUpdates[key] = {
-            codeSnippetImage: updates[key].codeSnippetImage || '',
-            projectImage: updates[key].projectImage || '',
+          // Handle file uploads for submission images
+          let codeSnippetImage = updates[key].codeSnippetImage || ''
+          let projectImage = updates[key].projectImage || ''
+          let uploadErrors: string[] = []
+          
+          // Upload code snippet image if file provided
+          if (codeSnippetFile) {
+            try {
+              const imagePath = `tasks/${id}/code-snippet-${Date.now()}`
+              codeSnippetImage = await firebaseStorageService.uploadImage(codeSnippetFile, imagePath)
+              console.log('Code snippet image uploaded successfully:', codeSnippetImage)
+            } catch (uploadError) {
+              console.error('Failed to upload code snippet image:', uploadError)
+              uploadErrors.push('Code snippet image upload failed')
+              // Don't throw error - allow submission without image
+              codeSnippetImage = ''
+            }
+          } else if (codeSnippetImage && codeSnippetImage.startsWith('blob:')) {
+            console.warn('Blob URL detected but no file provided for upload')
+            codeSnippetImage = ''
+          }
+          
+          // Upload project image if file provided
+          if (projectFile) {
+            try {
+              const imagePath = `tasks/${id}/project-${Date.now()}`
+              projectImage = await firebaseStorageService.uploadImage(projectFile, imagePath)
+              console.log('Project image uploaded successfully:', projectImage)
+            } catch (uploadError) {
+              console.error('Failed to upload project image:', uploadError)
+              uploadErrors.push('Project image upload failed')
+              // Don't throw error - allow submission without image
+              projectImage = ''
+            }
+          } else if (projectImage && projectImage.startsWith('blob:')) {
+            console.warn('Blob URL detected but no file provided for upload')
+            projectImage = ''
+          }
+          
+          // Clean submission object - only include non-empty image URLs
+          const submissionData: any = {
             details: updates[key].details || '',
             instructorRating: updates[key].instructorRating || 0,
             submittedAt: updates[key].submittedAt || new Date().toISOString(),
             reviewedAt: updates[key].reviewedAt || null,
             instructorFeedback: updates[key].instructorFeedback || null
           }
+          
+          // Include Firebase URLs; only blob URLs are invalid after submit
+          if (codeSnippetImage && !codeSnippetImage.startsWith('blob:')) {
+            submissionData.codeSnippetImage = codeSnippetImage
+          }
+          if (projectImage && !projectImage.startsWith('blob:')) {
+            submissionData.projectImage = projectImage
+          }
+          
+          // Add upload errors to feedback if any
+          if (uploadErrors.length > 0) {
+            const existingFeedback = submissionData.instructorFeedback || ''
+            submissionData.instructorFeedback = `${existingFeedback} [Note: ${uploadErrors.join(', ')}]`
+          }
+          
+          cleanedUpdates[key] = submissionData
         } else if (updates[key] !== undefined) {
           cleanedUpdates[key] = updates[key]
         }
       }
       
       await updateDoc(docRef, cleanedUpdates)
+      console.log('Task updated successfully in Firestore')
     } catch (error) {
-      console.error('Error updating task:', error)
-      throw error
+      console.error('Error updating task in Firestore:', error)
+      throw new Error(`Failed to update task: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
   async deleteTask(id: string): Promise<void> {
     try {
       await deleteDoc(this.getDocRef(this.collections.tasks, id))
+      console.log('Task deleted successfully from Firestore')
     } catch (error) {
-      console.error('Error deleting task:', error)
-      throw error
+      console.error('Error deleting task from Firestore:', error)
+      throw new Error(`Failed to delete task: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -665,32 +757,43 @@ class FirestoreStorageService {
     }
   }
 
-  // Admin profile image operations
-  async saveAdminProfileImage(userId: string, imageData: string): Promise<void> {
+  // Shared profile image operations
+  async saveProfileImage(userId: string, imageData: string): Promise<void> {
     try {
       const settings = await this.getSettings()
-      if (!settings.adminProfileImages) {
-        settings.adminProfileImages = {}
+      if (!settings.profileImages) {
+        settings.profileImages = {}
       }
-      settings.adminProfileImages[userId] = imageData
+      settings.profileImages[userId] = imageData
       await this.setSettings(settings)
     } catch (error) {
-      console.error('Error saving admin profile image:', error)
+      console.error('Error saving profile image:', error)
       throw error
     }
   }
 
-  async getAdminProfileImage(userId: string): Promise<string | null> {
+  async getProfileImage(userId: string): Promise<string | null> {
     try {
       const settings = await this.getSettings()
+      if (settings?.profileImages?.[userId]) {
+        return settings.profileImages[userId]
+      }
       if (settings?.adminProfileImages?.[userId]) {
         return settings.adminProfileImages[userId]
       }
       return null
     } catch (error) {
-      console.error('Error getting admin profile image:', error)
+      console.error('Error getting profile image:', error)
       return null
     }
+  }
+
+  async saveAdminProfileImage(userId: string, imageData: string): Promise<void> {
+    return this.saveProfileImage(userId, imageData)
+  }
+
+  async getAdminProfileImage(userId: string): Promise<string | null> {
+    return this.getProfileImage(userId)
   }
 }
 

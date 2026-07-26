@@ -49,7 +49,7 @@
   }
 
   .dark body {
-    background: linear-gradient(to bottom, #312e81, #1e1b4b, #2e1065) !important;
+    background: var(--background) !important;
   }
 }
 

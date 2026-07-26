@@ -4,7 +4,7 @@ export type TraineeStatus = 'active' | 'completed' | 'on-hold' | 'dropped'
 
 export type TeacherStatus = 'active' | 'inactive' | 'on-leave'
 
-export type NotificationType = 'daily_report_submitted' | 'task_submitted' | 'task_completed' | 'task_rejected' | 'weekly_report'
+export type NotificationType = 'daily_report_submitted' | 'task_assigned' | 'task_submitted' | 'task_completed' | 'task_rejected' | 'weekly_report'
 
 export type Topic = 
   | 'HTML'
@@ -107,7 +107,7 @@ export interface Teacher {
   assignedTrainees: string[]
 }
 
-export type TaskStatus = 'pending' | 'submitted' | 'completed' | 'rejected'
+export type TaskStatus = 'created' | 'pending' | 'submitted' | 'approved' | 'completed' | 'rejected'
 
 export interface TaskSubmission {
   codeSnippetImage: string

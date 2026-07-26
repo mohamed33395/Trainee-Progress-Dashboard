@@ -33,7 +33,7 @@ export function Header() {
       // Navigate based on notification type
       if (notification.type === 'daily_report_submitted') {
         router.push('/student-reports')
-      } else if (notification.type === 'task_submitted' || notification.type === 'task_completed' || notification.type === 'task_rejected') {
+      } else if (notification.type === 'task_assigned' || notification.type === 'task_submitted' || notification.type === 'task_completed' || notification.type === 'task_rejected') {
         router.push('/tasks')
       } else if (notification.type === 'weekly_report') {
         router.push('/weekly-reports')

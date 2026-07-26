@@ -35,7 +35,7 @@ export function Sidebar() {
         const loadImage = async () => {
             if (user?.id) {
                 try {
-                    const savedImage = await firestoreStorageService.getAdminProfileImage(user.id)
+                    const savedImage = await firestoreStorageService.getProfileImage(user.id)
                     if (savedImage) {
                         setAdminProfileImage(savedImage)
                     }
@@ -55,7 +55,7 @@ export function Sidebar() {
                 const imageData = reader.result as string
                 setAdminProfileImage(imageData)
                 try {
-                    await firestoreStorageService.saveAdminProfileImage(user.id, imageData)
+                    await firestoreStorageService.saveProfileImage(user.id, imageData)
                 } catch (error) {
                     console.error('Error saving admin profile image:', error)
                 }

@@ -22,8 +22,8 @@ interface AppContextType {
   addTeacher: (teacher: Teacher) => void
   updateTeacher: (id: string, updates: Partial<Teacher>) => void
   deleteTeacher: (id: string) => void
-  addTask: (task: Task) => void
-  updateTask: (id: string, updates: Partial<Task>) => void
+  addTask: (task: Task, taskImageFile?: File) => void
+  updateTask: (id: string, updates: Partial<Task>, codeSnippetFile?: File, projectFile?: File) => void
   deleteTask: (id: string) => void
   addUser: (user: User) => void
   updateUser: (id: string, updates: Partial<User>) => void
@@ -391,22 +391,43 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await refreshData()
   }
 
-  const addTask = async (task: Task) => {
-    if (useFirestore) {
-      await firestoreStorageService.addTask(task)
-    } else {
-      storageService.addTask(task)
+  const addTask = async (task: Task, taskImageFile?: File) => {
+    try {
+      console.log('AppContext addTask called:', task.id, task.title)
+      if (useFirestore) {
+        console.log('Using Firestore for addTask')
+        await firestoreStorageService.addTask(task, taskImageFile)
+      } else {
+        console.log('Using localStorage for addTask')
+        storageService.addTask(task)
+      }
+      console.log('addTask completed, refreshing data...')
+      await refreshData()
+      console.log('Data refreshed after addTask')
+    } catch (error) {
+      console.error('Error in addTask:', error)
+      throw error
     }
-    await refreshData()
   }
 
-  const updateTask = async (id: string, updates: Partial<Task>) => {
-    if (useFirestore) {
-      await firestoreStorageService.updateTask(id, updates)
-    } else {
-      storageService.updateTask(id, updates)
+  const updateTask = async (id: string, updates: Partial<Task>, codeSnippetFile?: File, projectFile?: File) => {
+    try {
+      console.log('AppContext updateTask called:', id, updates)
+      console.log('Files provided:', { codeSnippetFile: !!codeSnippetFile, projectFile: !!projectFile })
+      if (useFirestore) {
+        console.log('Using Firestore for updateTask')
+        await firestoreStorageService.updateTask(id, updates, codeSnippetFile, projectFile)
+      } else {
+        console.log('Using localStorage for updateTask')
+        storageService.updateTask(id, updates)
+      }
+      console.log('updateTask completed, refreshing data...')
+      await refreshData()
+      console.log('Data refreshed after updateTask')
+    } catch (error) {
+      console.error('Error in updateTask:', error)
+      throw error
     }
-    await refreshData()
   }
 
   const deleteTask = async (id: string) => {

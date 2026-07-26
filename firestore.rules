@@ -1,0 +1,93 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isTeamLeader() {
+      return isAuthenticated() && 
+             (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'team_leader' ||
+              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+    }
+    
+    function isTeacher() {
+      return isAuthenticated() && 
+             (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher' ||
+              isTeamLeader());
+    }
+    
+    function isTrainee() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'trainee';
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      allow read: if isTeamLeader() || isOwner(userId);
+      allow create: if true; // Allow initial user creation
+      allow update: if isTeamLeader() || isOwner(userId);
+      allow delete: if isAdmin();
+    }
+    
+    // Trainees collection
+    match /trainees/{traineeId} {
+      allow read: if isTeamLeader() || isTeacher() || isTrainee();
+      allow create: if isTeamLeader();
+      allow update: if isTeamLeader() || isTeacher();
+      allow delete: if isTeamLeader();
+    }
+    
+    // Teachers collection
+    match /teachers/{teacherId} {
+      allow read: if isTeamLeader() || isTeacher();
+      allow create: if isTeamLeader();
+      allow update: if isTeamLeader();
+      allow delete: if isTeamLeader();
+    }
+    
+    // Tasks collection
+    match /tasks/{taskId} {
+      allow read: if isTeamLeader() || isTeacher() || isTrainee();
+      allow create: if isTeamLeader() || isTeacher();
+      allow update: if isTeamLeader() || isTeacher() || 
+                     (isTrainee() && resource.data.assignedTraineeId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.traineeId);
+      allow delete: if isTeamLeader() || isTeacher();
+    }
+    
+    // Reports collection
+    match /reports/{reportId} {
+      allow read: if isTeamLeader() || isTeacher() || 
+                 (isTrainee() && resource.data.traineeId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.traineeId);
+      allow create: if isTeamLeader() || isTeacher() || 
+                    (isTrainee() && resource.data.traineeId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.traineeId);
+      allow update: if isTeamLeader() || isTeacher() || 
+                    (isTrainee() && resource.data.traineeId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.traineeId);
+      allow delete: if isTeamLeader() || isTeacher();
+    }
+    
+    // Notifications collection
+    match /notifications/{notificationId} {
+      allow read: if isOwner(resource.data.recipientId) || isTeamLeader();
+      allow create: if isTeamLeader();
+      allow update: if isOwner(resource.data.recipientId) || isTeamLeader();
+      allow delete: if isOwner(resource.data.recipientId) || isTeamLeader();
+    }
+    
+    // Settings collection
+    match /settings/{documentId} {
+      allow read: if isTeamLeader();
+      allow write: if isTeamLeader();
+    }
+  }
+}

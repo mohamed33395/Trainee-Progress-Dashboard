@@ -1,0 +1,54 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isTeamLeader() {
+      return isAuthenticated() && 
+             (firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'team_leader' ||
+              firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin');
+    }
+    
+    function isTeacher() {
+      return isAuthenticated() && 
+             (firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'teacher' ||
+              isTeamLeader());
+    }
+    
+    function isTrainee() {
+      return isAuthenticated() && 
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'trainee';
+    }
+    
+    // Task images
+    match /tasks/{taskId}/{allPaths=**} {
+      allow read: if isTeamLeader() || isTeacher() || isTrainee();
+      allow write: if isTeamLeader() || isTeacher() || 
+                    (isTrainee() && requestId.startsWith(taskId));
+      allow delete: if isTeamLeader() || isTeacher();
+    }
+    
+    // Profile images
+    match /profiles/{userId}/{allPaths=**} {
+      allow read: if isTeamLeader() || isTeacher() || isTrainee();
+      allow write: if isTeamLeader() || isOwner(userId);
+      allow delete: if isTeamLeader() || isOwner(userId);
+    }
+    
+    // General uploads (for future use)
+    match /uploads/{allPaths=**} {
+      allow read: if isTeamLeader() || isTeacher() || isTrainee();
+      allow write: if isTeamLeader() || isTeacher();
+      allow delete: if isTeamLeader() || isTeacher();
+    }
+  }
+}
