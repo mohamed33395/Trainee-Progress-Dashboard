@@ -4,6 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Trainee, DailyReport } from '@/types'
 import { useLanguage } from '@/context/LanguageContext'
 import { useAuth } from '@/context/AuthContext'
+import { useMemo } from 'react'
 
 interface DashboardProps {
   trainees: Trainee[]
@@ -15,47 +16,60 @@ const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'
 export function Dashboard({ trainees, reports }: DashboardProps) {
   const { t } = useLanguage()
   const { user, isTrainee } = useAuth()
-  
-  // Filter data based on user role
-  const currentTrainee = isTrainee() && user?.traineeId 
-    ? trainees.find(t => t.id === user.traineeId)
-    : null
-  
-  const displayTrainees = currentTrainee ? [currentTrainee] : trainees
-  const displayReports = currentTrainee 
-    ? reports.filter(r => r.traineeId === currentTrainee.id)
-    : reports
-  
+
+  // Filter data based on user role - memoized
+  const displayTrainees = useMemo(() => {
+    const currentTrainee = isTrainee() && user?.traineeId
+      ? trainees.find(t => t.id === user.traineeId)
+      : null
+    return currentTrainee ? [currentTrainee] : trainees
+  }, [trainees, user?.traineeId, isTrainee])
+
+  const displayReports = useMemo(() => {
+    const currentTrainee = isTrainee() && user?.traineeId
+      ? trainees.find(t => t.id === user.traineeId)
+      : null
+    return currentTrainee
+      ? reports.filter(r => r.traineeId === currentTrainee.id)
+      : reports
+  }, [reports, trainees, user?.traineeId, isTrainee])
+
+  // Memoized statistics
   const totalTrainees = displayTrainees.length
-  const activeTrainees = displayTrainees.filter(t => t.status === 'active').length
-  const averageProgress = displayTrainees.length > 0 
+  const activeTrainees = useMemo(() => displayTrainees.filter(t => t.status === 'active').length, [displayTrainees])
+  const averageProgress = useMemo(() => displayTrainees.length > 0
     ? Math.round(displayTrainees.reduce((acc, t) => acc + t.progress, 0) / displayTrainees.length)
-    : 0
+    : 0, [displayTrainees])
   const completedReports = displayReports.length
 
-  // Weekly statistics
-  const weeklyData = [
+  // Weekly statistics - memoized
+  const weeklyData = useMemo(() => [
     { week: 'Week 1', reports: 12, progress: 45 },
     { week: 'Week 2', reports: 15, progress: 52 },
     { week: 'Week 3', reports: 18, progress: 58 },
     { week: 'Week 4', reports: 22, progress: 65 },
     { week: 'Week 5', reports: 20, progress: 70 },
     { week: 'Week 6', reports: 25, progress: 75 },
-  ]
+  ], [])
 
-  // Status distribution
-  const statusData = [
+  // Status distribution - memoized
+  const statusData = useMemo(() => [
     { name: t.common.active, value: displayTrainees.filter(t => t.status === 'active').length },
     { name: t.common.completed, value: displayTrainees.filter(t => t.status === 'completed').length },
     { name: t.common.onHold, value: displayTrainees.filter(t => t.status === 'on-hold').length },
     { name: t.common.dropped, value: displayTrainees.filter(t => t.status === 'dropped').length },
-  ].filter(item => item.value > 0)
+  ].filter(item => item.value > 0), [displayTrainees, t.common.active, t.common.completed, t.common.onHold, t.common.dropped])
 
-  // Progress trend
-  const progressData = displayTrainees.slice(0, 5).map(t => ({
+  // Progress trend - memoized
+  const progressData = useMemo(() => displayTrainees.slice(0, 5).map(t => ({
     name: t.name.split(' ')[0],
     progress: t.progress,
-  }))
+  })), [displayTrainees])
+
+  // Top performers - memoized
+  const topPerformers = useMemo(() => trainees
+    .sort((a, b) => b.progress - a.progress)
+    .slice(0, 3), [trainees])
 
   return (
     <div className="space-y-6">
@@ -195,23 +209,20 @@ export function Dashboard({ trainees, reports }: DashboardProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {trainees
-                .sort((a, b) => b.progress - a.progress)
-                .slice(0, 3)
-                .map((trainee, index) => (
-                  <div key={trainee.id} className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white text-sm font-bold">
-                      {index + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{trainee.name}</p>
-                      <p className="text-xs text-muted-foreground">Week {trainee.currentWeek}</p>
-                    </div>
-                    <div className="text-sm font-bold text-blue-600">
-                      {trainee.progress}%
-                    </div>
+              {topPerformers.map((trainee, index) => (
+                <div key={trainee.id} className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white text-sm font-bold">
+                    {index + 1}
                   </div>
-                ))}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{trainee.name}</p>
+                    <p className="text-xs text-muted-foreground">Week {trainee.currentWeek}</p>
+                  </div>
+                  <div className="text-sm font-bold text-blue-600">
+                    {trainee.progress}%
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>

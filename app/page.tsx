@@ -10,7 +10,7 @@ import { useApp } from '@/context/AppContext'
 
 export default function Home() {
   const { isAuthenticated } = useAuth()
-  const { trainees, reports } = useApp()
+  const { trainees, reports, isLoading } = useApp()
 
   if (!isAuthenticated) {
     return <Login />
@@ -22,7 +22,13 @@ export default function Home() {
       <div className="flex-1 flex flex-col mr-72">
         <Header />
         <main className="flex-1 p-6 overflow-auto">
-          <Dashboard trainees={trainees} reports={reports} />
+          {isLoading ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+            </div>
+          ) : (
+            <Dashboard trainees={trainees} reports={reports} />
+          )}
         </main>
         <Footer />
       </div>

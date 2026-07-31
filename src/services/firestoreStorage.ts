@@ -415,10 +415,11 @@ class FirestoreStorageService {
       const cleanedUpdates: any = {}
       
       for (const key in updates) {
-        if (key === 'submission' && updates[key]) {
+        if (key === 'submission' && updates[key as keyof Task]) {
           // Handle file uploads for submission images
-          let codeSnippetImage = updates[key].codeSnippetImage || ''
-          let projectImage = updates[key].projectImage || ''
+          const submission = updates[key as keyof Task] as any
+          let codeSnippetImage = submission.codeSnippetImage || ''
+          let projectImage = submission.projectImage || ''
           let uploadErrors: string[] = []
           
           // Upload code snippet image if file provided
@@ -457,11 +458,11 @@ class FirestoreStorageService {
           
           // Clean submission object - only include non-empty image URLs
           const submissionData: any = {
-            details: updates[key].details || '',
-            instructorRating: updates[key].instructorRating || 0,
-            submittedAt: updates[key].submittedAt || new Date().toISOString(),
-            reviewedAt: updates[key].reviewedAt || null,
-            instructorFeedback: updates[key].instructorFeedback || null
+            details: submission.details || '',
+            instructorRating: submission.instructorRating || 0,
+            submittedAt: submission.submittedAt || new Date().toISOString(),
+            reviewedAt: submission.reviewedAt || null,
+            instructorFeedback: submission.instructorFeedback || null
           }
           
           // Include Firebase URLs; only blob URLs are invalid after submit
@@ -479,8 +480,8 @@ class FirestoreStorageService {
           }
           
           cleanedUpdates[key] = submissionData
-        } else if (updates[key] !== undefined) {
-          cleanedUpdates[key] = updates[key]
+        } else if (updates[key as keyof Task] !== undefined) {
+          cleanedUpdates[key] = updates[key as keyof Task]
         }
       }
       

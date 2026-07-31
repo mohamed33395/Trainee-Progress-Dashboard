@@ -20,7 +20,7 @@ interface TasksProps {
 
 export function Tasks({ currentTraineeId }: TasksProps) {
     const { t } = useLanguage()
-    const { tasks, trainees, addTask, updateTask, deleteTask, users, updateTrainee } = useApp()
+    const { tasks, trainees, addTask, updateTask, deleteTask, users, updateTrainee, teachers } = useApp()
     const { user, isTrainee, isTeamLeader } = useAuth()
     const [isFormOpen, setIsFormOpen] = useState(false)
     const [isSubmissionOpen, setIsSubmissionOpen] = useState(false)
@@ -207,7 +207,6 @@ export function Tasks({ currentTraineeId }: TasksProps) {
         // Get instructor name from teachers list using assignedCoach ID
         let instructorName = 'Team Leader'
         if (trainee?.assignedCoach) {
-            const { teachers } = useApp()
             const instructor = teachers.find(t => t.id === trainee.assignedCoach)
             if (instructor) {
                 instructorName = instructor.name
@@ -739,7 +738,7 @@ export function Tasks({ currentTraineeId }: TasksProps) {
                     )}
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsDetailOpen(false)}>
-                            {t.common.close}
+                            {t.common.cancel}
                         </Button>
                         {selectedTask?.submission && (
                             <Button onClick={() => handleDownloadPDF(selectedTask)}>

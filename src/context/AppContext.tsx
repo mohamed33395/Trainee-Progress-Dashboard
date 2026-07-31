@@ -1,5 +1,5 @@
 "use client"
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
 import { Trainee, DailyReport, Teacher, LanguageLevel, Task, User, Notification } from '../types'
 import { storageService } from '../services/storage'
 import { firestoreStorageService } from '../services/firestoreStorage'
@@ -13,6 +13,7 @@ interface AppContextType {
   tasks: Task[]
   users: User[]
   notifications: Notification[]
+  isLoading: boolean
   addTrainee: (trainee: Trainee) => void
   updateTrainee: (id: string, updates: Partial<Trainee>) => void
   deleteTrainee: (id: string) => void
@@ -44,6 +45,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [users, setUsers] = useState<User[]>([])
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isInitialized, setIsInitialized] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [useFirestore, setUseFirestore] = useState(false)
 
   useEffect(() => {
@@ -89,7 +91,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     initializeData()
   }, [])
 
-  const refreshData = async () => {
+  const refreshData = useCallback(async () => {
+    setIsLoading(true)
     try {
       if (useFirestore) {
         const data = await firestoreStorageService.getAllData()
@@ -109,8 +112,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('Error refreshing data:', error)
+    } finally {
+      setIsLoading(false)
     }
-  }
+  }, [useFirestore])
 
   const calculateLanguageLevel = (evaluationScores: number[]): LanguageLevel => {
     const average = evaluationScores.reduce((sum, score) => sum + score, 0) / evaluationScores.length
@@ -154,22 +159,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const addTrainee = async (trainee: Trainee) => {
+  const addTrainee = useCallback(async (trainee: Trainee) => {
     if (useFirestore) {
       await firestoreStorageService.addTrainee(trainee)
     } else {
       storageService.addTrainee(trainee)
     }
     await refreshData()
-  }
+  }, [useFirestore, refreshData])
 
-  const updateTrainee = async (id: string, updates: Partial<Trainee>) => {
+  const updateTrainee = useCallback(async (id: string, updates: Partial<Trainee>) => {
     const currentTrainees = useFirestore ? await firestoreStorageService.getTrainees() : storageService.getTrainees()
     const currentTrainee = currentTrainees.find(t => t.id === id)
-    
+
     if (currentTrainee && updates.assignedCoach !== undefined) {
       const currentTeachers = useFirestore ? await firestoreStorageService.getTeachers() : storageService.getTeachers()
-      
+
       // Remove trainee from previous teacher's assignedTrainees
       if (currentTrainee.assignedCoach && currentTrainee.assignedCoach !== updates.assignedCoach) {
         const previousTeacher = currentTeachers.find(t => t.id === currentTrainee.assignedCoach)
@@ -185,7 +190,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           }
         }
       }
-      
+
       // Add trainee to new teacher's assignedTrainees
       if (updates.assignedCoach && updates.assignedCoach !== currentTrainee.assignedCoach) {
         const newTeacher = currentTeachers.find(t => t.id === updates.assignedCoach)
@@ -202,37 +207,37 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
       }
     }
-    
+
     if (useFirestore) {
       await firestoreStorageService.updateTrainee(id, updates)
     } else {
       storageService.updateTrainee(id, updates)
     }
     await refreshData()
-  }
+  }, [useFirestore, refreshData])
 
-  const deleteTrainee = async (id: string) => {
+  const deleteTrainee = useCallback(async (id: string) => {
     if (useFirestore) {
       await firestoreStorageService.deleteTrainee(id)
     } else {
       storageService.deleteTrainee(id)
     }
     await refreshData()
-  }
+  }, [useFirestore, refreshData])
 
-  const addReport = async (report: DailyReport) => {
+  const addReport = useCallback(async (report: DailyReport) => {
     if (useFirestore) {
       await firestoreStorageService.addReport(report)
     } else {
       storageService.addReport(report)
     }
     await updateTraineeLanguageLevel(report.traineeId)
-    
+
     // Send notification to team leaders when a daily report is submitted
     const users = useFirestore ? await firestoreStorageService.getUsers() : storageService.getUsers()
     const teamLeaders = users.filter(u => u.role === 'team_leader' || u.role === 'admin')
     const trainee = useFirestore ? await firestoreStorageService.getTraineeById(report.traineeId) : storageService.getTraineeById(report.traineeId)
-    
+
     for (const teamLeader of teamLeaders) {
       const notification: Notification = {
         id: Date.now().toString() + '-' + teamLeader.id,
@@ -295,29 +300,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
       }
     }
-    
-    await refreshData()
-  }
 
-  const updateReport = async (id: string, updates: Partial<DailyReport>) => {
+    await refreshData()
+  }, [useFirestore, refreshData])
+
+  const updateReport = useCallback(async (id: string, updates: Partial<DailyReport>) => {
     if (useFirestore) {
       await firestoreStorageService.updateReport(id, updates)
     } else {
       storageService.updateReport(id, updates)
     }
     await refreshData()
-  }
+  }, [useFirestore, refreshData])
 
-  const deleteReport = async (id: string) => {
+  const deleteReport = useCallback(async (id: string) => {
     if (useFirestore) {
       await firestoreStorageService.deleteReport(id)
     } else {
       storageService.deleteReport(id)
     }
     await refreshData()
-  }
+  }, [useFirestore, refreshData])
 
-  const addTeacher = async (teacher: Teacher) => {
+  const addTeacher = useCallback(async (teacher: Teacher) => {
     if (useFirestore) {
       await firestoreStorageService.addTeacher(teacher)
     } else {
@@ -336,15 +341,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     }
     await refreshData()
-  }
+  }, [useFirestore, refreshData])
 
-  const updateTeacher = async (id: string, updates: Partial<Teacher>) => {
+  const updateTeacher = useCallback(async (id: string, updates: Partial<Teacher>) => {
     const currentTeachers = useFirestore ? await firestoreStorageService.getTeachers() : storageService.getTeachers()
     const currentTeacher = currentTeachers.find(t => t.id === id)
-    
+
     if (currentTeacher && updates.assignedTrainees) {
       const currentTrainees = useFirestore ? await firestoreStorageService.getTrainees() : storageService.getTrainees()
-      
+
       // Remove teacher assignment from trainees that are no longer assigned
       for (const traineeId of currentTeacher.assignedTrainees) {
         if (!updates.assignedTrainees?.includes(traineeId)) {
@@ -358,7 +363,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           }
         }
       }
-      
+
       // Add teacher assignment to newly assigned trainees
       for (const traineeId of updates.assignedTrainees) {
         if (!currentTeacher.assignedTrainees.includes(traineeId)) {
@@ -373,25 +378,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
       }
     }
-    
+
     if (useFirestore) {
       await firestoreStorageService.updateTeacher(id, updates)
     } else {
       storageService.updateTeacher(id, updates)
     }
     await refreshData()
-  }
+  }, [useFirestore, refreshData])
 
-  const deleteTeacher = async (id: string) => {
+  const deleteTeacher = useCallback(async (id: string) => {
     if (useFirestore) {
       await firestoreStorageService.deleteTeacher(id)
     } else {
       storageService.deleteTeacher(id)
     }
     await refreshData()
-  }
+  }, [useFirestore, refreshData])
 
-  const addTask = async (task: Task, taskImageFile?: File) => {
+  const addTask = useCallback(async (task: Task, taskImageFile?: File) => {
     try {
       console.log('AppContext addTask called:', task.id, task.title)
       if (useFirestore) {
@@ -408,9 +413,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       console.error('Error in addTask:', error)
       throw error
     }
-  }
+  }, [useFirestore, refreshData])
 
-  const updateTask = async (id: string, updates: Partial<Task>, codeSnippetFile?: File, projectFile?: File) => {
+  const updateTask = useCallback(async (id: string, updates: Partial<Task>, codeSnippetFile?: File, projectFile?: File) => {
     try {
       console.log('AppContext updateTask called:', id, updates)
       console.log('Files provided:', { codeSnippetFile: !!codeSnippetFile, projectFile: !!projectFile })
@@ -428,70 +433,70 @@ export function AppProvider({ children }: { children: ReactNode }) {
       console.error('Error in updateTask:', error)
       throw error
     }
-  }
+  }, [useFirestore, refreshData])
 
-  const deleteTask = async (id: string) => {
+  const deleteTask = useCallback(async (id: string) => {
     if (useFirestore) {
       await firestoreStorageService.deleteTask(id)
     } else {
       storageService.deleteTask(id)
     }
     await refreshData()
-  }
+  }, [useFirestore, refreshData])
 
-  const addUser = async (user: User) => {
+  const addUser = useCallback(async (user: User) => {
     if (useFirestore) {
       await firestoreStorageService.addUser(user)
     } else {
       storageService.addUser(user)
     }
     await refreshData()
-  }
+  }, [useFirestore, refreshData])
 
-  const updateUser = async (id: string, updates: Partial<User>) => {
+  const updateUser = useCallback(async (id: string, updates: Partial<User>) => {
     if (useFirestore) {
       await firestoreStorageService.updateUser(id, updates)
     } else {
       storageService.updateUser(id, updates)
     }
     await refreshData()
-  }
+  }, [useFirestore, refreshData])
 
-  const deleteUser = async (id: string) => {
+  const deleteUser = useCallback(async (id: string) => {
     if (useFirestore) {
       await firestoreStorageService.deleteUser(id)
     } else {
       storageService.deleteUser(id)
     }
     await refreshData()
-  }
+  }, [useFirestore, refreshData])
 
-  const addNotification = async (notification: Notification) => {
+  const addNotification = useCallback(async (notification: Notification) => {
     if (useFirestore) {
       await firestoreStorageService.addNotification(notification)
     } else {
       storageService.addNotification(notification)
     }
     await refreshData()
-  }
+  }, [useFirestore, refreshData])
 
-  const markNotificationAsRead = async (id: string) => {
+  const markNotificationAsRead = useCallback(async (id: string) => {
     if (useFirestore) {
       await firestoreStorageService.updateNotification(id, { isRead: true })
     } else {
       storageService.markNotificationAsRead(id)
     }
     await refreshData()
-  }
+  }, [useFirestore, refreshData])
 
-  const deleteNotification = async (id: string) => {
+  const deleteNotification = useCallback(async (id: string) => {
     if (useFirestore) {
       await firestoreStorageService.deleteNotification(id)
     } else {
       storageService.deleteNotification(id)
     }
     await refreshData()
-  }
+  }, [useFirestore, refreshData])
 
   if (!isInitialized) {
     return (
@@ -513,6 +518,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         tasks,
         users,
         notifications,
+        isLoading,
         addTrainee,
         updateTrainee,
         deleteTrainee,
