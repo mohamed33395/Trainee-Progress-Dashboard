@@ -113,7 +113,7 @@ export interface TaskSubmission {
   codeSnippetImage: string
   projectImage: string
   details: string
-  instructorRating: number
+  instructorRating?: number
   submittedAt: string
   reviewedAt?: string
   instructorFeedback?: string

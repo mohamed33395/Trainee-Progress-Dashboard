@@ -1,5 +1,5 @@
 import { useParams } from 'next/navigation'
-import { Trainee, DailyReport } from '@/types'
+import { Trainee, DailyReport, Teacher } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'

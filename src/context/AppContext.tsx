@@ -162,11 +162,41 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addTrainee = useCallback(async (trainee: Trainee) => {
     if (useFirestore) {
       await firestoreStorageService.addTrainee(trainee)
+      // Create user account for trainee
+      const existingUser = await firestoreStorageService.getUserByUsername(trainee.email)
+      if (!existingUser) {
+        const traineeUser: User = {
+          id: `user-${trainee.id}`,
+          username: trainee.email.split('@')[0],
+          email: trainee.email,
+          password: 'trainee123', // Default password
+          role: 'trainee',
+          traineeId: trainee.id,
+          createdAt: new Date().toISOString(),
+        }
+        await firestoreStorageService.addUser(traineeUser)
+        setUsers(prev => [...prev, traineeUser])
+      }
     } else {
       storageService.addTrainee(trainee)
+      // Create user account for trainee
+      const existingUser = storageService.getUserByUsername(trainee.email.split('@')[0])
+      if (!existingUser) {
+        const traineeUser: User = {
+          id: `user-${trainee.id}`,
+          username: trainee.email.split('@')[0],
+          email: trainee.email,
+          password: 'trainee123', // Default password
+          role: 'trainee',
+          traineeId: trainee.id,
+          createdAt: new Date().toISOString(),
+        }
+        storageService.addUser(traineeUser)
+        setUsers(prev => [...prev, traineeUser])
+      }
     }
-    await refreshData()
-  }, [useFirestore, refreshData])
+    setTrainees(prev => [...prev, trainee])
+  }, [useFirestore])
 
   const updateTrainee = useCallback(async (id: string, updates: Partial<Trainee>) => {
     const currentTrainees = useFirestore ? await firestoreStorageService.getTrainees() : storageService.getTrainees()
@@ -183,10 +213,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
             await firestoreStorageService.updateTeacher(previousTeacher.id, {
               assignedTrainees: previousTeacher.assignedTrainees.filter(tId => tId !== id)
             })
+            setTeachers(prev => prev.map(t => t.id === previousTeacher.id ? { ...t, assignedTrainees: t.assignedTrainees.filter(tId => tId !== id) } : t))
           } else {
             storageService.updateTeacher(previousTeacher.id, {
               assignedTrainees: previousTeacher.assignedTrainees.filter(tId => tId !== id)
             })
+            setTeachers(prev => prev.map(t => t.id === previousTeacher.id ? { ...t, assignedTrainees: t.assignedTrainees.filter(tId => tId !== id) } : t))
           }
         }
       }
@@ -199,10 +231,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
             await firestoreStorageService.updateTeacher(newTeacher.id, {
               assignedTrainees: [...newTeacher.assignedTrainees, id]
             })
+            setTeachers(prev => prev.map(t => t.id === newTeacher.id ? { ...t, assignedTrainees: [...t.assignedTrainees, id] } : t))
           } else {
             storageService.updateTeacher(newTeacher.id, {
               assignedTrainees: [...newTeacher.assignedTrainees, id]
             })
+            setTeachers(prev => prev.map(t => t.id === newTeacher.id ? { ...t, assignedTrainees: [...t.assignedTrainees, id] } : t))
           }
         }
       }
@@ -213,8 +247,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } else {
       storageService.updateTrainee(id, updates)
     }
-    await refreshData()
-  }, [useFirestore, refreshData])
+    setTrainees(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t))
+  }, [useFirestore])
 
   const deleteTrainee = useCallback(async (id: string) => {
     if (useFirestore) {
@@ -222,8 +256,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } else {
       storageService.deleteTrainee(id)
     }
-    await refreshData()
-  }, [useFirestore, refreshData])
+    setTrainees(prev => prev.filter(t => t.id !== id))
+  }, [useFirestore])
 
   const addReport = useCallback(async (report: DailyReport) => {
     if (useFirestore) {
@@ -301,8 +335,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    await refreshData()
-  }, [useFirestore, refreshData])
+    setReports(prev => [...prev, report])
+  }, [useFirestore])
 
   const updateReport = useCallback(async (id: string, updates: Partial<DailyReport>) => {
     if (useFirestore) {
@@ -310,8 +344,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } else {
       storageService.updateReport(id, updates)
     }
-    await refreshData()
-  }, [useFirestore, refreshData])
+    setReports(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r))
+  }, [useFirestore])
 
   const deleteReport = useCallback(async (id: string) => {
     if (useFirestore) {
@@ -319,14 +353,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } else {
       storageService.deleteReport(id)
     }
-    await refreshData()
-  }, [useFirestore, refreshData])
+    setReports(prev => prev.filter(r => r.id !== id))
+  }, [useFirestore])
 
   const addTeacher = useCallback(async (teacher: Teacher) => {
     if (useFirestore) {
       await firestoreStorageService.addTeacher(teacher)
+      // Create user account for teacher
+      const existingUser = await firestoreStorageService.getUserByUsername(teacher.email)
+      if (!existingUser) {
+        const teacherUser: User = {
+          id: `user-${teacher.id}`,
+          username: teacher.email.split('@')[0],
+          email: teacher.email,
+          password: 'teacher123', // Default password
+          role: 'teacher',
+          createdAt: new Date().toISOString(),
+        }
+        await firestoreStorageService.addUser(teacherUser)
+      }
     } else {
       storageService.addTeacher(teacher)
+      // Create user account for teacher
+      const existingUser = storageService.getUserByUsername(teacher.email.split('@')[0])
+      if (!existingUser) {
+        const teacherUser: User = {
+          id: `user-${teacher.id}`,
+          username: teacher.email.split('@')[0],
+          email: teacher.email,
+          password: 'teacher123', // Default password
+          role: 'teacher',
+          createdAt: new Date().toISOString(),
+        }
+        storageService.addUser(teacherUser)
+      }
     }
     // Update trainees to reflect teacher assignment
     const currentTrainees = useFirestore ? await firestoreStorageService.getTrainees() : storageService.getTrainees()
@@ -338,10 +398,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         } else {
           storageService.updateTrainee(traineeId, { assignedCoach: teacher.id })
         }
+        setTrainees(prev => prev.map(t => t.id === traineeId ? { ...t, assignedCoach: teacher.id } : t))
       }
     }
-    await refreshData()
-  }, [useFirestore, refreshData])
+    setTeachers(prev => [...prev, teacher])
+  }, [useFirestore])
 
   const updateTeacher = useCallback(async (id: string, updates: Partial<Teacher>) => {
     const currentTeachers = useFirestore ? await firestoreStorageService.getTeachers() : storageService.getTeachers()
@@ -384,8 +445,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } else {
       storageService.updateTeacher(id, updates)
     }
-    await refreshData()
-  }, [useFirestore, refreshData])
+    setTeachers(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t))
+  }, [useFirestore])
 
   const deleteTeacher = useCallback(async (id: string) => {
     if (useFirestore) {
@@ -393,8 +454,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } else {
       storageService.deleteTeacher(id)
     }
-    await refreshData()
-  }, [useFirestore, refreshData])
+    setTeachers(prev => prev.filter(t => t.id !== id))
+  }, [useFirestore])
 
   const addTask = useCallback(async (task: Task) => {
     try {
@@ -406,14 +467,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         console.log('Using localStorage for addTask')
         storageService.addTask(task)
       }
-      console.log('addTask completed, refreshing data...')
-      await refreshData()
-      console.log('Data refreshed after addTask')
+      setTasks(prev => [...prev, task])
     } catch (error) {
       console.error('Error in addTask:', error)
       throw error
     }
-  }, [useFirestore, refreshData])
+  }, [useFirestore])
 
   const updateTask = useCallback(async (id: string, updates: Partial<Task>, codeSnippetFile?: File, projectFile?: File) => {
     try {
@@ -426,14 +485,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         console.log('Using localStorage for updateTask')
         storageService.updateTask(id, updates)
       }
-      console.log('updateTask completed, refreshing data...')
-      await refreshData()
-      console.log('Data refreshed after updateTask')
+      setTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t))
     } catch (error) {
       console.error('Error in updateTask:', error)
       throw error
     }
-  }, [useFirestore, refreshData])
+  }, [useFirestore])
 
   const deleteTask = useCallback(async (id: string) => {
     if (useFirestore) {
@@ -441,8 +498,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } else {
       storageService.deleteTask(id)
     }
-    await refreshData()
-  }, [useFirestore, refreshData])
+    setTasks(prev => prev.filter(t => t.id !== id))
+  }, [useFirestore])
 
   const addUser = useCallback(async (user: User) => {
     if (useFirestore) {
@@ -450,8 +507,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } else {
       storageService.addUser(user)
     }
-    await refreshData()
-  }, [useFirestore, refreshData])
+    setUsers(prev => [...prev, user])
+  }, [useFirestore])
 
   const updateUser = useCallback(async (id: string, updates: Partial<User>) => {
     if (useFirestore) {
@@ -459,8 +516,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } else {
       storageService.updateUser(id, updates)
     }
-    await refreshData()
-  }, [useFirestore, refreshData])
+    setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updates } : u))
+  }, [useFirestore])
 
   const deleteUser = useCallback(async (id: string) => {
     if (useFirestore) {
@@ -468,8 +525,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } else {
       storageService.deleteUser(id)
     }
-    await refreshData()
-  }, [useFirestore, refreshData])
+    setUsers(prev => prev.filter(u => u.id !== id))
+  }, [useFirestore])
 
   const addNotification = useCallback(async (notification: Notification) => {
     if (useFirestore) {
@@ -477,8 +534,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } else {
       storageService.addNotification(notification)
     }
-    await refreshData()
-  }, [useFirestore, refreshData])
+    setNotifications(prev => [...prev, notification])
+  }, [useFirestore])
 
   const markNotificationAsRead = useCallback(async (id: string) => {
     if (useFirestore) {
@@ -486,8 +543,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } else {
       storageService.markNotificationAsRead(id)
     }
-    await refreshData()
-  }, [useFirestore, refreshData])
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n))
+  }, [useFirestore])
 
   const deleteNotification = useCallback(async (id: string) => {
     if (useFirestore) {
@@ -495,8 +552,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } else {
       storageService.deleteNotification(id)
     }
-    await refreshData()
-  }, [useFirestore, refreshData])
+    setNotifications(prev => prev.filter(n => n.id !== id))
+  }, [useFirestore])
 
   if (!isInitialized) {
     return (
