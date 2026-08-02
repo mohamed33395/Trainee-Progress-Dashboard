@@ -52,8 +52,15 @@ export function Tasks({ currentTraineeId }: TasksProps) {
         projectImage: null as string | null,
         projectFile: null as File | null,
         details: '',
-        instructorRating: 5,
+        
     })
+
+    // Review state
+    const [reviewData, setReviewData] = useState({
+        rating: 5,
+        feedback: ''
+    })
+    const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false)
 
     const filteredTasks = effectiveTraineeId
         ? tasks.filter(task => task.assignedTraineeId === effectiveTraineeId)
@@ -65,24 +72,59 @@ export function Tasks({ currentTraineeId }: TasksProps) {
         const file = e.target.files?.[0]
         if (file) {
             const reader = new FileReader()
-            reader.onloadend = () => {
-                if (type === 'task') {
-                    setTaskImageFile(file)
-                    setTaskImage(reader.result as string)
-                } else if (type === 'code') {
-                    setSubmissionData(prev => ({
-                        ...prev,
-                        codeSnippetFile: file,
-                        codeSnippetImage: reader.result as string
-                    }))
-                } else if (type === 'project') {
-                    setSubmissionData(prev => ({
-                        ...prev,
-                        projectFile: file,
-                        projectImage: reader.result as string
-                    }))
-                }
-            }
+            reader.onload = (event) => {
+                const img = new Image()
+                img.src = event.target?.result as string
+                img.onload = () => {
+                    const MAX_SIZE = 200; // Max width/height for submission images
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_SIZE) {
+                            height *= MAX_SIZE / width;
+                            width = MAX_SIZE;
+                        }
+                    } else {
+                        if (height > MAX_SIZE) {
+                            width *= MAX_SIZE / height;
+                            height = MAX_SIZE;
+                        }
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx?.drawImage(img, 0, 0, width, height);
+
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            const compressedReader = new FileReader();
+                            compressedReader.onloadend = () => {
+                                const compressedImage = compressedReader.result as string
+                                if (type === 'task') {
+                                    setTaskImageFile(file)
+                                    setTaskImage(compressedImage)
+                                } else if (type === 'code') {
+                                    setSubmissionData(prev => ({
+                                        ...prev,
+                                        codeSnippetFile: file,
+                                        codeSnippetImage: compressedImage
+                                    }))
+                                } else if (type === 'project') {
+                                    setSubmissionData(prev => ({
+                                        ...prev,
+                                        projectFile: file,
+                                        projectImage: compressedImage
+                                    }))
+                                }
+                            };
+                            compressedReader.readAsDataURL(blob);
+                        }
+                    }, 'image/jpeg', 0.4); // Compress to JPEG with 40% quality
+                };
+            };
             reader.readAsDataURL(file)
         }
     }
@@ -143,7 +185,7 @@ export function Tasks({ currentTraineeId }: TasksProps) {
                 codeSnippetImage: submissionData.codeSnippetImage,
                 projectImage: submissionData.projectImage,
                 details: submissionData.details,
-                instructorRating: submissionData.instructorRating,
+                
                 submittedAt: new Date().toISOString(),
             }
         })
@@ -156,7 +198,7 @@ export function Tasks({ currentTraineeId }: TasksProps) {
             projectImage: null,
             projectFile: null,
             details: '',
-            instructorRating: 5,
+            
         })
     }
 
@@ -167,8 +209,9 @@ export function Tasks({ currentTraineeId }: TasksProps) {
                 status: approved ? 'completed' : 'rejected',
                 submission: {
                     ...task.submission,
+                    instructorRating: reviewData.rating,
+                    instructorFeedback: reviewData.feedback,
                     reviewedAt: new Date().toISOString(),
-                    instructorFeedback: approved ? 'Great work!' : 'Please review and resubmit.',
                 }
             })
 
@@ -176,7 +219,7 @@ export function Tasks({ currentTraineeId }: TasksProps) {
             if (approved && task.skills && task.maxScore) {
                 const trainee = trainees.find(t => t.id === task.assignedTraineeId)
                 if (trainee) {
-                    const scorePercentage = (task.submission.instructorRating / task.maxScore) * 100
+                    const scorePercentage = (reviewData.rating / task.maxScore) * 100
                     const updatedSkillsProgress = { ...trainee.skillsProgress }
 
                     task.skills.forEach(skill => {
@@ -189,6 +232,9 @@ export function Tasks({ currentTraineeId }: TasksProps) {
                     await updateTrainee(trainee.id, { skillsProgress: updatedSkillsProgress })
                 }
             }
+            
+            setIsReviewDialogOpen(false)
+            setReviewData({ rating: 5, feedback: '' })
         }
     }
 
@@ -417,14 +463,20 @@ export function Tasks({ currentTraineeId }: TasksProps) {
                                             <Button
                                                 variant="default"
                                                 size="sm"
-                                                onClick={() => handleReviewTask(task.id, true)}
+                                                onClick={() => {
+                                                    setSelectedTask(task)
+                                                    setIsReviewDialogOpen(true)
+                                                }}
                                             >
                                                 {t.tasks.approve}
                                             </Button>
                                             <Button
                                                 variant="destructive"
                                                 size="sm"
-                                                onClick={() => handleReviewTask(task.id, false)}
+                                                onClick={() => {
+                                                    setSelectedTask(task)
+                                                    setIsReviewDialogOpen(true)
+                                                }}
                                             >
                                                 {t.tasks.reject}
                                             </Button>
@@ -457,9 +509,11 @@ export function Tasks({ currentTraineeId }: TasksProps) {
                                             <p className="text-sm mb-2">
                                                 <span className="font-medium">{t.tasks.taskDetails}:</span> {task.submission.details}
                                             </p>
-                                            <p className="text-sm mb-2">
-                                                <span className="font-medium">{t.tasks.instructorRating}:</span> {task.submission.instructorRating}/10
-                                            </p>
+                                            {!isTrainee() && task.submission.instructorRating && (
+                                                <p className="text-sm mb-2">
+                                                    <span className="font-medium">{t.tasks.instructorRating}:</span> {task.submission.instructorRating}/10
+                                                </p>
+                                            )}
                                             {task.submission.instructorFeedback && (
                                                 <p className="text-sm">
                                                     <span className="font-medium">{t.tasks.instructorFeedback}:</span> {task.submission.instructorFeedback}
@@ -715,10 +769,12 @@ export function Tasks({ currentTraineeId }: TasksProps) {
                                         <p className="mt-2">{selectedTask.submission.details}</p>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4 text-sm">
-                                        <div>
-                                            <Label className="text-muted-foreground">Rating</Label>
-                                            <p className="font-medium">{selectedTask.submission.instructorRating}/10</p>
-                                        </div>
+                                        {!isTrainee() && selectedTask.submission.instructorRating && (
+                                            <div>
+                                                <Label className="text-muted-foreground">Rating</Label>
+                                                <p className="font-medium">{selectedTask.submission.instructorRating}/10</p>
+                                            </div>
+                                        )}
                                         <div>
                                             <Label className="text-muted-foreground">Submitted At</Label>
                                             <p className="font-medium">
@@ -842,17 +898,6 @@ export function Tasks({ currentTraineeId }: TasksProps) {
                             />
                         </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="rating">{t.tasks.instructorRating}</Label>
-                            <Input
-                                id="rating"
-                                type="number"
-                                min="1"
-                                max="10"
-                                value={submissionData.instructorRating}
-                                onChange={(e) => setSubmissionData(prev => ({ ...prev, instructorRating: parseInt(e.target.value) }))}
-                            />
-                        </div>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsSubmissionOpen(false)}>
@@ -864,6 +909,50 @@ export function Tasks({ currentTraineeId }: TasksProps) {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Review Dialog */}
+            <Dialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Review Task</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="rating">Rating (1-10)</Label>
+                            <Input
+                                id="rating"
+                                type="number"
+                                min="1"
+                                max="10"
+                                value={reviewData.rating}
+                                onChange={(e) => setReviewData(prev => ({ ...prev, rating: parseInt(e.target.value) }))}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="feedback">Feedback</Label>
+                            <Textarea
+                                id="feedback"
+                                value={reviewData.feedback}
+                                onChange={(e) => setReviewData(prev => ({ ...prev, feedback: e.target.value }))}
+                                placeholder="Add your feedback..."
+                                rows={3}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsReviewDialogOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button onClick={() => handleReviewTask(selectedTask?.id || '', true)}>
+                            Approve
+                        </Button>
+                        <Button variant="destructive" onClick={() => handleReviewTask(selectedTask?.id || '', false)}>
+                            Reject
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
+

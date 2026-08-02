@@ -23,7 +23,7 @@ interface AppContextType {
   addTeacher: (teacher: Teacher) => void
   updateTeacher: (id: string, updates: Partial<Teacher>) => void
   deleteTeacher: (id: string) => void
-  addTask: (task: Task, taskImageFile?: File) => void
+  addTask: (task: Task) => void
   updateTask: (id: string, updates: Partial<Task>, codeSnippetFile?: File, projectFile?: File) => void
   deleteTask: (id: string) => void
   addUser: (user: User) => void
@@ -396,12 +396,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await refreshData()
   }, [useFirestore, refreshData])
 
-  const addTask = useCallback(async (task: Task, taskImageFile?: File) => {
+  const addTask = useCallback(async (task: Task) => {
     try {
       console.log('AppContext addTask called:', task.id, task.title)
       if (useFirestore) {
         console.log('Using Firestore for addTask')
-        await firestoreStorageService.addTask(task, taskImageFile)
+        await firestoreStorageService.addTask(task)
       } else {
         console.log('Using localStorage for addTask')
         storageService.addTask(task)

@@ -8,7 +8,7 @@ import { useApp } from '@/context/AppContext'
 
 export default function WeeklyReportsPage() {
   const { isAuthenticated } = useAuth()
-  const { trainees, reports } = useApp()
+  const { trainees, reports, teachers } = useApp()
 
   if (!isAuthenticated) {
     return null // Will be handled by redirect or login page
@@ -20,7 +20,7 @@ export default function WeeklyReportsPage() {
       <div className="flex-1 flex flex-col mr-72">
         <Header />
         <main className="flex-1 overflow-auto">
-          <WeeklyReports trainees={trainees} reports={reports} />
+          <WeeklyReports trainees={trainees} reports={reports} teachers={teachers} />
         </main>
         <Footer />
       </div>

@@ -109,7 +109,16 @@ export function UserManagement() {
       status: 'active' as const,
       startDate: new Date().toISOString(),
       reports: [],
-      skillsProgress: {},
+      skillsProgress: {
+        'HTML': 0,
+        'CSS': 0,
+        'JavaScript': 0,
+        'TypeScript': 0,
+        'React': 0,
+        'Next.js': 0,
+        'Git': 0,
+        'Tailwind CSS': 0,
+      },
       languageLevel: 'Beginner' as const,
     }
 

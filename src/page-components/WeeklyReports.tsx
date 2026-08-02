@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Calendar, TrendingUp, Target, ChevronLeft, ChevronRight, Download, FileText, Sparkles } from 'lucide-react'
-import { DailyReport, Topic, Trainee } from '@/types'
+import { DailyReport, Topic, Trainee, Teacher } from '@/types'
 import { useAuth } from '@/context/AuthContext'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
@@ -14,9 +14,10 @@ import autoTable from 'jspdf-autotable'
 interface WeeklyReportsProps {
   trainees: Trainee[]
   reports: DailyReport[]
+  teachers: Teacher[]
 }
 
-export function WeeklyReports({ trainees, reports }: WeeklyReportsProps) {
+export function WeeklyReports({ trainees, reports, teachers }: WeeklyReportsProps) {
   const { user, isTrainee } = useAuth()
   const [selectedWeek, setSelectedWeek] = useState(1)
   const [selectedTraineeId, setSelectedTraineeId] = useState<string | null>(null)
@@ -100,6 +101,12 @@ export function WeeklyReports({ trainees, reports }: WeeklyReportsProps) {
   const weeklyReports = selectedTraineeId ? getWeeklyReports(selectedTraineeId, selectedWeek) : []
   const skillShots = getSkillShots(weeklyReports)
   const weeklyAverages = calculateWeeklyAverages(weeklyReports)
+
+  // Get teacher name from ID
+  const getTeacherName = (teacherId: string) => {
+    const teacher = teachers.find(t => t.id === teacherId)
+    return teacher?.name || 'Not Assigned'
+  }
 
   // Download weekly report as PDF
   const downloadWeeklyReport = () => {
@@ -386,6 +393,40 @@ export function WeeklyReports({ trainees, reports }: WeeklyReportsProps) {
 
       {selectedTrainee && (
         <>
+          {/* Trainee Info Card */}
+          <Card className="border-2 border-purple-300/50 shadow-lg bg-purple-900/20 backdrop-blur-sm">
+            <CardHeader className="bg-purple-300/10">
+              <CardTitle className="text-xl flex items-center gap-2 text-purple-100">
+                <Sparkles className="h-5 w-5 text-purple-300" />
+                معلومات المتدرب
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="text-center p-4 bg-purple-200/10 rounded-xl border-2 border-purple-400/50">
+                  <div className="text-sm text-purple-300 mb-1">الاسم</div>
+                  <div className="text-lg font-bold text-purple-100">{selectedTrainee.name}</div>
+                </div>
+                <div className="text-center p-4 bg-purple-200/10 rounded-xl border-2 border-purple-500/50">
+                  <div className="text-sm text-purple-300 mb-1">العمر</div>
+                  <div className="text-lg font-bold text-purple-100">{selectedTrainee.age || 'N/A'}</div>
+                </div>
+                <div className="text-center p-4 bg-purple-200/10 rounded-xl border-2 border-purple-600/50">
+                  <div className="text-sm text-purple-300 mb-1">البلد</div>
+                  <div className="text-lg font-bold text-purple-50">{selectedTrainee.origin || 'N/A'}</div>
+                </div>
+                <div className="text-center p-4 bg-purple-100/10 rounded-xl border-2 border-purple-700/50">
+                  <div className="text-sm text-purple-200 mb-1">مستوى اللغة</div>
+                  <div className="text-lg font-bold text-white">{selectedTrainee.languageLevel}</div>
+                </div>
+                <div className="text-center p-4 bg-purple-100/10 rounded-xl border-2 border-purple-800/50">
+                  <div className="text-sm text-purple-200 mb-1">المعلم</div>
+                  <div className="text-lg font-bold text-white">{getTeacherName(selectedTrainee.assignedCoach || '')}</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Week Selection */}
           <Card className="border-2 border-purple-300/50 shadow-lg bg-purple-900/20  backdrop-blur-sm">
             <CardHeader className="bg-purple-300/10 ">

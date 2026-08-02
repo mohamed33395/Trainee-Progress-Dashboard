@@ -44,6 +44,99 @@ class FirestoreStorageService {
     settings: 'settings'
   }
 
+  // Compress image to base64
+  private async compressImageToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const img = new Image()
+        img.src = event.target?.result as string
+        img.onload = () => {
+          const MAX_SIZE = 300; // Max width/height for task images
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const compressedReader = new FileReader();
+              compressedReader.onloadend = () => {
+                resolve(compressedReader.result as string);
+              };
+              compressedReader.readAsDataURL(blob);
+            } else {
+              reject(new Error('Failed to compress image'));
+            }
+          }, 'image/jpeg', 0.6); // Compress to JPEG with 60% quality
+        };
+        img.onerror = () => reject(new Error('Failed to load image'));
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Compress base64 image string
+  private async compressBase64Image(base64String: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      img.src = base64String
+      img.onload = () => {
+        const MAX_SIZE = 300; // Max width/height for task images
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_SIZE) {
+            height *= MAX_SIZE / width;
+            width = MAX_SIZE;
+          }
+        } else {
+          if (height > MAX_SIZE) {
+            width *= MAX_SIZE / height;
+            height = MAX_SIZE;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const compressedReader = new FileReader();
+            compressedReader.onloadend = () => {
+              resolve(compressedReader.result as string);
+            };
+            compressedReader.readAsDataURL(blob);
+          } else {
+            reject(new Error('Failed to compress image'));
+          }
+        }, 'image/jpeg', 0.6); // Compress to JPEG with 60% quality
+      };
+      img.onerror = () => reject(new Error('Failed to load image'));
+    });
+  }
+
   // Get collection reference
   private getCollectionRef(collectionName: string) {
     return collection(db, collectionName)
@@ -341,26 +434,20 @@ class FirestoreStorageService {
     }
   }
 
-  async addTask(task: Task, taskImageFile?: File): Promise<void> {
+  async addTask(task: Task): Promise<void> {
     try {
       let imageUrl = task.imageUrl
 
-      // If image file is provided, upload it to Firebase Storage
-      if (taskImageFile) {
+      // If imageUrl is a base64 string, compress it
+      if (imageUrl && imageUrl.startsWith('data:')) {
+        console.log('Compressing base64 image for task')
         try {
-          const imagePath = `tasks/${task.id}/task-image-${Date.now()}`
-          imageUrl = await firebaseStorageService.uploadImage(taskImageFile, imagePath)
-          console.log('Task image uploaded successfully:', imageUrl)
-        } catch (uploadError) {
-          console.error('Failed to upload task image:', uploadError)
-          // Don't throw error - allow task creation without image
-          imageUrl = ''
+          imageUrl = await this.compressBase64Image(imageUrl)
+          console.log('Task image compressed successfully')
+        } catch (error) {
+          console.error('Failed to compress task image:', error)
+          // Keep original if compression fails
         }
-      } else if (imageUrl && imageUrl.startsWith('data:')) {
-        // If it's a base64 string, we need to handle it
-        console.warn('Base64 image detected - this should be uploaded to Firebase Storage')
-        // For now, clear it to avoid document size issues
-        imageUrl = ''
       }
 
       // Clean the task object before saving to Firebase
@@ -420,40 +507,24 @@ class FirestoreStorageService {
           const submission = updates[key as keyof Task] as any
           let codeSnippetImage = submission.codeSnippetImage || ''
           let projectImage = submission.projectImage || ''
-          let uploadErrors: string[] = []
           
-          // Upload code snippet image if file provided
-          if (codeSnippetFile) {
+          // Compress base64 images if they are too large
+          if (codeSnippetImage && codeSnippetImage.startsWith('data:')) {
             try {
-              const imagePath = `tasks/${id}/code-snippet-${Date.now()}`
-              codeSnippetImage = await firebaseStorageService.uploadImage(codeSnippetFile, imagePath)
-              console.log('Code snippet image uploaded successfully:', codeSnippetImage)
-            } catch (uploadError) {
-              console.error('Failed to upload code snippet image:', uploadError)
-              uploadErrors.push('Code snippet image upload failed')
-              // Don't throw error - allow submission without image
-              codeSnippetImage = ''
+              codeSnippetImage = await this.compressBase64Image(codeSnippetImage)
+              console.log('Code snippet image compressed')
+            } catch (error) {
+              console.error('Failed to compress code snippet image:', error)
             }
-          } else if (codeSnippetImage && codeSnippetImage.startsWith('blob:')) {
-            console.warn('Blob URL detected but no file provided for upload')
-            codeSnippetImage = ''
           }
           
-          // Upload project image if file provided
-          if (projectFile) {
+          if (projectImage && projectImage.startsWith('data:')) {
             try {
-              const imagePath = `tasks/${id}/project-${Date.now()}`
-              projectImage = await firebaseStorageService.uploadImage(projectFile, imagePath)
-              console.log('Project image uploaded successfully:', projectImage)
-            } catch (uploadError) {
-              console.error('Failed to upload project image:', uploadError)
-              uploadErrors.push('Project image upload failed')
-              // Don't throw error - allow submission without image
-              projectImage = ''
+              projectImage = await this.compressBase64Image(projectImage)
+              console.log('Project image compressed')
+            } catch (error) {
+              console.error('Failed to compress project image:', error)
             }
-          } else if (projectImage && projectImage.startsWith('blob:')) {
-            console.warn('Blob URL detected but no file provided for upload')
-            projectImage = ''
           }
           
           // Clean submission object - only include non-empty image URLs
@@ -465,18 +536,12 @@ class FirestoreStorageService {
             instructorFeedback: submission.instructorFeedback || null
           }
           
-          // Include Firebase URLs; only blob URLs are invalid after submit
-          if (codeSnippetImage && !codeSnippetImage.startsWith('blob:')) {
+          // Include compressed base64 images
+          if (codeSnippetImage) {
             submissionData.codeSnippetImage = codeSnippetImage
           }
-          if (projectImage && !projectImage.startsWith('blob:')) {
+          if (projectImage) {
             submissionData.projectImage = projectImage
-          }
-          
-          // Add upload errors to feedback if any
-          if (uploadErrors.length > 0) {
-            const existingFeedback = submissionData.instructorFeedback || ''
-            submissionData.instructorFeedback = `${existingFeedback} [Note: ${uploadErrors.join(', ')}]`
           }
           
           cleanedUpdates[key] = submissionData

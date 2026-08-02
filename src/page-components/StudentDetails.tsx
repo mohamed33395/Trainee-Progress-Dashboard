@@ -15,9 +15,10 @@ import { useLanguage } from '@/context/LanguageContext'
 interface StudentDetailsProps {
   trainees: Trainee[]
   reports: DailyReport[]
+  teachers: Teacher[]
 }
 
-export function StudentDetails({ trainees, reports }: StudentDetailsProps) {
+export function StudentDetails({ trainees, reports, teachers }: StudentDetailsProps) {
   const { t } = useLanguage()
   const params = useParams<{ id: string }>()
   const id = params?.id
@@ -36,6 +37,12 @@ export function StudentDetails({ trainees, reports }: StudentDetailsProps) {
     skill,
     progress,
   }))
+
+  // Get teacher name from ID
+  const getTeacherName = (teacherId: string) => {
+    const teacher = teachers.find(t => t.id === teacherId)
+    return teacher?.name || t.studentDetails.notAssigned
+  }
 
   const weeklyProgress = traineeReports.map(report => ({
     week: `Week ${report.week}`,
@@ -194,7 +201,7 @@ export function StudentDetails({ trainees, reports }: StudentDetailsProps) {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">{t.studentDetails.assignedCoach}</span>
-                    <span>{trainee.assignedCoach || t.studentDetails.notAssigned}</span>
+                    <span>{getTeacherName(trainee.assignedCoach || '')}</span>
                   </div>
                 </div>
               </CardContent>

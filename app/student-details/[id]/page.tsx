@@ -8,7 +8,7 @@ import { useApp } from '@/context/AppContext'
 import { useParams } from 'next/navigation'
 
 export default function StudentDetailsPage() {
-  const { trainees, reports } = useApp()
+  const { trainees, reports, teachers } = useApp()
   const params = useParams()
   const id = params?.id as string
 
@@ -18,7 +18,7 @@ export default function StudentDetailsPage() {
       <div className="flex-1 flex flex-col mr-72">
         <Header />
         <main className="flex-1 p-6 overflow-auto">
-          <StudentDetails trainees={trainees} reports={reports} />
+          <StudentDetails trainees={trainees} reports={reports} teachers={teachers} />
         </main>
         <Footer />
       </div>

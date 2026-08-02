@@ -37,7 +37,16 @@ const topics: Topic[] = ['HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Ne
 
 export function TraineeForm({ isOpen, onClose, onSubmit, trainee, teachers = [] }: TraineeFormProps) {
   const { t } = useLanguage()
-  const [selectedSkills, setSelectedSkills] = useState<Record<string, number>>({})
+  const [selectedSkills, setSelectedSkills] = useState<Record<string, number>>(trainee?.skillsProgress || {
+    'HTML': 0,
+    'CSS': 0,
+    'JavaScript': 0,
+    'TypeScript': 0,
+    'React': 0,
+    'Next.js': 0,
+    'Git': 0,
+    'Tailwind CSS': 0,
+  })
   const [photoPreview, setPhotoPreview] = useState<string | null>(trainee?.avatar || null)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [selectedTeacher, setSelectedTeacher] = useState<string>(trainee?.assignedCoach || '')
