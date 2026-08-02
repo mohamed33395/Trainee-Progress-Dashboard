@@ -68,11 +68,11 @@ export function Trainees({ trainees, teachers, onTraineeDelete, onTraineeAdd, on
     setIsFormOpen(true)
   }
 
-  const handleFormSubmit = (trainee: Trainee) => {
+  const handleFormSubmit = async (trainee: Trainee) => {
     if (editingTrainee) {
-      onTraineeUpdate(trainee.id, trainee)
+      await onTraineeUpdate(trainee.id, trainee)
     } else {
-      onTraineeAdd(trainee)
+      await onTraineeAdd(trainee)
     }
     setEditingTrainee(undefined)
   }

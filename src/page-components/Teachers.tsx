@@ -57,11 +57,11 @@ export function Teachers({ teachers, trainees, onTeacherDelete, onTeacherAdd, on
     setIsFormOpen(true)
   }
 
-  const handleFormSubmit = (teacher: Teacher) => {
+  const handleFormSubmit = async (teacher: Teacher) => {
     if (editingTeacher) {
-      onTeacherUpdate(teacher.id, teacher)
+      await onTeacherUpdate(teacher.id, teacher)
     } else {
-      onTeacherAdd(teacher)
+      await onTeacherAdd(teacher)
     }
     setEditingTeacher(undefined)
   }

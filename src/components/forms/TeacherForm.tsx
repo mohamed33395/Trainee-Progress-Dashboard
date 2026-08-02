@@ -66,12 +66,47 @@ export function TeacherForm({ isOpen, onClose, onSubmit, teacher, trainees = [] 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      setPhotoFile(file)
       const reader = new FileReader()
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result as string)
-      }
-      reader.readAsDataURL(file)
+      reader.onload = (event) => {
+        const img = new Image()
+        img.src = event.target?.result as string
+        img.onload = () => {
+          const MAX_SIZE = 200; // Reduced max width/height for smaller file size
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() });
+              setPhotoFile(compressedFile);
+              const compressedReader = new FileReader();
+              compressedReader.onloadend = () => {
+                setPhotoPreview(compressedReader.result as string);
+              };
+              compressedReader.readAsDataURL(compressedFile);
+            }
+          }, 'image/jpeg', 0.5); // Compress to JPEG with 50% quality
+        };
+      };
+      reader.readAsDataURL(file);
     }
   }
 

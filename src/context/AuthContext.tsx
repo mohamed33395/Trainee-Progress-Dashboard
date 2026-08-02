@@ -40,8 +40,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return localStorage.getItem('isAuthenticated') === 'true'
   })
   const [useFirestore, setUseFirestore] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return localStorage.getItem('firebase_configured') === 'true'
+    if (typeof window === 'undefined') return true
+    // Always use Firebase to match AppContext
+    return true
   })
 
   useEffect(() => {

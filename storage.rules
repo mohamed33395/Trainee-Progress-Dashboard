@@ -44,6 +44,13 @@ service firebase.storage {
       allow delete: if isTeamLeader() || isOwner(userId);
     }
     
+    // Avatar images for teachers and trainees
+    match /avatars/{allPaths=**} {
+      allow read: if true; // Allow public read access for avatars
+      allow write: if isTeamLeader() || isTeacher();
+      allow delete: if isTeamLeader() || isTeacher();
+    }
+    
     // General uploads (for future use)
     match /uploads/{allPaths=**} {
       allow read: if isTeamLeader() || isTeacher() || isTrainee();
