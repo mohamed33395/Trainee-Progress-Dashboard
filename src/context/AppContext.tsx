@@ -163,11 +163,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (useFirestore) {
       await firestoreStorageService.addTrainee(trainee)
       // Create user account for trainee
-      const existingUser = await firestoreStorageService.getUserByUsername(trainee.email)
+      const username = trainee.email.split('@')[0]
+      const existingUser = await firestoreStorageService.getUserByUsername(username)
       if (!existingUser) {
         const traineeUser: User = {
           id: `user-${trainee.id}`,
-          username: trainee.email.split('@')[0],
+          username: username,
           email: trainee.email,
           password: 'trainee123', // Default password
           role: 'trainee',
@@ -180,11 +181,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } else {
       storageService.addTrainee(trainee)
       // Create user account for trainee
-      const existingUser = storageService.getUserByUsername(trainee.email.split('@')[0])
+      const username = trainee.email.split('@')[0]
+      const existingUser = storageService.getUserByUsername(username)
       if (!existingUser) {
         const traineeUser: User = {
           id: `user-${trainee.id}`,
-          username: trainee.email.split('@')[0],
+          username: username,
           email: trainee.email,
           password: 'trainee123', // Default password
           role: 'trainee',
@@ -513,10 +515,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const updateUser = useCallback(async (id: string, updates: Partial<User>) => {
     if (useFirestore) {
       await firestoreStorageService.updateUser(id, updates)
+      // Reload users from Firestore to ensure sync
+      const updatedUsers = await firestoreStorageService.getUsers()
+      setUsers(updatedUsers)
     } else {
       storageService.updateUser(id, updates)
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updates } : u))
     }
-    setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updates } : u))
   }, [useFirestore])
 
   const deleteUser = useCallback(async (id: string) => {

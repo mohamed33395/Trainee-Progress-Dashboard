@@ -47,8 +47,9 @@ export function WeeklyReports({ trainees, reports, teachers }: WeeklyReportsProp
   }
 
   // Calculate skill shots (skills not used during the week)
-  const getSkillShots = (weeklyReports: DailyReport[]): Topic[] => {
-    const allTopics: Topic[] = ['HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Next.js', 'Git', 'Tailwind CSS']
+  const getSkillShots = (weeklyReports: DailyReport[], traineeId: string): Topic[] => {
+    const trainee = trainees.find(t => t.id === traineeId)
+    const allTopics = trainee?.skillsProgress ? Object.keys(trainee.skillsProgress) as Topic[] : []
     const usedTopics = new Set<Topic>()
     
     weeklyReports.forEach(report => {
@@ -99,7 +100,7 @@ export function WeeklyReports({ trainees, reports, teachers }: WeeklyReportsProp
 
   const selectedTrainee = selectedTraineeId ? trainees.find(t => t.id === selectedTraineeId) : null
   const weeklyReports = selectedTraineeId ? getWeeklyReports(selectedTraineeId, selectedWeek) : []
-  const skillShots = getSkillShots(weeklyReports)
+  const skillShots = getSkillShots(weeklyReports, selectedTraineeId || '')
   const weeklyAverages = calculateWeeklyAverages(weeklyReports)
 
   // Get teacher name from ID

@@ -114,15 +114,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (username: string, password: string): Promise<boolean> => {
     await initializeDefaultUsers()
     
-    const foundUser = useFirestore 
+    console.log('Attempting login for username:', username)
+    
+    // Try to find user by username first
+    let foundUser = useFirestore 
       ? await firestoreStorageService.getUserByUsername(username)
       : storageService.getUserByUsername(username)
     
+    // If not found, try by email
+    if (!foundUser && username.includes('@')) {
+      console.log('User not found by username, trying by email')
+      const allUsers = useFirestore 
+        ? await firestoreStorageService.getUsers()
+        : storageService.getUsers()
+      foundUser = allUsers.find(u => u.email === username)
+    }
+    
+    console.log('Found user:', foundUser ? foundUser.username : 'null')
+    console.log('Input password:', password)
+    console.log('Stored password:', foundUser?.password)
+    
     if (!foundUser) {
+      console.log('User not found')
       return false
     }
 
     if (foundUser.password !== password) {
+      console.log('Password mismatch')
       return false
     }
 

@@ -7,7 +7,7 @@ import { DailyReportForm } from '@/page-components/DailyReport'
 import { useApp } from '@/context/AppContext'
 
 export default function DailyReportPage() {
-  const { trainees, addReport } = useApp()
+  const { trainees, teachers, addReport } = useApp()
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -15,7 +15,7 @@ export default function DailyReportPage() {
       <div className="flex-1 flex flex-col mr-72">
         <Header />
         <main className="flex-1 p-6 overflow-auto">
-          <DailyReportForm trainees={trainees} onSaveReport={addReport} />
+          <DailyReportForm trainees={trainees} teachers={teachers} onSaveReport={addReport} />
         </main>
         <Footer />
       </div>

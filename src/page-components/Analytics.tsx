@@ -32,7 +32,14 @@ export function Analytics({ trainees, reports, tasks, users }: AnalyticsProps) {
     : tasks
   
   // Skills distribution across all trainees
-  const skillsData = ['HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Next.js', 'Git', 'Tailwind CSS'].map(skill => {
+  const allSkills = new Set<string>()
+  displayTrainees.forEach(t => {
+    if (t.skillsProgress) {
+      Object.keys(t.skillsProgress).forEach(skill => allSkills.add(skill))
+    }
+  })
+  
+  const skillsData = Array.from(allSkills).map(skill => {
     const total = displayTrainees.reduce((acc, t) => {
       const progress = t.skillsProgress ? (t.skillsProgress[skill] || 0) : 0
       return acc + progress

@@ -613,7 +613,7 @@ export function Tasks({ currentTraineeId }: TasksProps) {
                         <div className="space-y-2">
                             <Label>{t.tasks.skills}</Label>
                             <div className="flex flex-wrap gap-2">
-                                {['HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Next.js', 'Git', 'Tailwind CSS'].map(skill => (
+                                {Object.keys(trainee?.skillsProgress || {}).map(skill => (
                                     <Button
                                         key={skill}
                                         type="button"

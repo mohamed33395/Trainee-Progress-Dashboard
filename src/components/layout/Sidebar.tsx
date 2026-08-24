@@ -20,6 +20,7 @@ import {cn} from '@/lib/utils'
 import {useState, useEffect} from 'react'
 import {useLanguage} from '@/context/LanguageContext'
 import {useAuth} from '@/context/AuthContext'
+import {useApp} from '@/context/AppContext'
 import {firestoreStorageService} from '@/services/firestoreStorage'
 
 export function Sidebar() {
@@ -29,23 +30,39 @@ export function Sidebar() {
     const [adminProfileImage, setAdminProfileImage] = useState<string | null>(null)
     const {language, setLanguage, dir, t} = useLanguage()
     const {isTrainee, isTeacher, isTeamLeader, isAdmin, user} = useAuth()
+    const {trainees, teachers} = useApp()
 
     // Load image from Firebase on mount
     useEffect(() => {
         const loadImage = async () => {
             if (user?.id) {
                 try {
+                    // First try to get from settings (for all users)
                     const savedImage = await firestoreStorageService.getProfileImage(user.id)
                     if (savedImage) {
                         setAdminProfileImage(savedImage)
+                        return
+                    }
+
+                    // If not found in settings, try to get from trainee/teacher avatar
+                    if (user.role === 'trainee' && user.traineeId) {
+                        const trainee = await firestoreStorageService.getTraineeById(user.traineeId)
+                        if (trainee?.avatar) {
+                            setAdminProfileImage(trainee.avatar)
+                        }
+                    } else if (user.role === 'teacher') {
+                        const teacher = teachers.find(t => t.email === user.email || t.name === user.username)
+                        if (teacher?.avatar) {
+                            setAdminProfileImage(teacher.avatar)
+                        }
                     }
                 } catch (error) {
-                    console.error('Error loading admin profile image:', error)
+                    console.error('Error loading profile image:', error)
                 }
             }
         }
         loadImage()
-    }, [user?.id])
+    }, [user?.id, user?.role, user?.traineeId, user?.email, user?.username, teachers])
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -56,8 +73,21 @@ export function Sidebar() {
                 setAdminProfileImage(imageData)
                 try {
                     await firestoreStorageService.saveProfileImage(user.id, imageData)
+                    
+                    // Also update trainee's avatar if user is a trainee
+                    if (user.role === 'trainee' && user.traineeId) {
+                        await firestoreStorageService.updateTrainee(user.traineeId, { avatar: imageData })
+                    }
+                    
+                    // Also update teacher's avatar if user is a teacher
+                    if (user.role === 'teacher') {
+                        const teacher = teachers.find(t => t.email === user.email || t.name === user.username)
+                        if (teacher) {
+                            await firestoreStorageService.updateTeacher(teacher.id, { avatar: imageData })
+                        }
+                    }
                 } catch (error) {
-                    console.error('Error saving admin profile image:', error)
+                    console.error('Error saving profile image:', error)
                 }
             }
             reader.readAsDataURL(file)

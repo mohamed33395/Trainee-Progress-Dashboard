@@ -184,7 +184,11 @@ export function UserManagement() {
       username: formData.username,
       email: formData.email,
       role: formData.role,
-      traineeId: formData.role === 'trainee' ? formData.traineeId : undefined,
+    }
+
+    // Only include traineeId if role is trainee
+    if (formData.role === 'trainee' && formData.traineeId) {
+      updates.traineeId = formData.traineeId
     }
 
     if (formData.password) {

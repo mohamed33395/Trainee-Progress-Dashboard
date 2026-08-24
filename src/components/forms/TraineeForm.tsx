@@ -33,20 +33,25 @@ interface TraineeFormProps {
   teachers?: Teacher[]
 }
 
-const topics: Topic[] = ['HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Next.js', 'Git', 'Tailwind CSS']
+const skillsBySpecialization: Record<string, Topic[]> = {
+  'Frontend Development': ['HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Next.js', 'Git', 'Tailwind CSS'],
+  'Backend Development': ['Node.js', 'Python', 'Java', 'SQL', 'MongoDB', 'Express', 'Docker', 'REST APIs', 'PHP', 'Laravel'],
+  'Full Stack Development': ['HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Next.js', 'Node.js', 'Express', 'SQL', 'MongoDB', 'Git', 'Docker', 'PHP', 'Laravel'],
+  'Web Development': ['HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Node.js', 'Express', 'SQL', 'Git', 'PHP', 'Laravel'],
+  'Mobile Development': ['JavaScript', 'TypeScript', 'React Native', 'Flutter', 'Dart', 'Java', 'Swift', 'Git'],
+  'Data Science': ['Python', 'SQL', 'MongoDB', 'Java', 'Git', 'Docker'],
+  'DevOps': ['Docker', 'Git', 'Python', 'Linux', 'AWS', 'CI/CD'],
+  'UI/UX Design': ['HTML', 'CSS', 'Tailwind CSS', 'Figma', 'Adobe XD'],
+  'Project Management': ['Git', 'Agile', 'Scrum', 'Jira'],
+  'Other': ['HTML', 'CSS', 'JavaScript', 'Git'],
+}
+
+const defaultTopics: Topic[] = ['HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Next.js', 'Git', 'Tailwind CSS']
 
 export function TraineeForm({ isOpen, onClose, onSubmit, trainee, teachers = [] }: TraineeFormProps) {
   const { t } = useLanguage()
-  const [selectedSkills, setSelectedSkills] = useState<Record<string, number>>(trainee?.skillsProgress || {
-    'HTML': 0,
-    'CSS': 0,
-    'JavaScript': 0,
-    'TypeScript': 0,
-    'React': 0,
-    'Next.js': 0,
-    'Git': 0,
-    'Tailwind CSS': 0,
-  })
+  const [currentTopics, setCurrentTopics] = useState<Topic[]>(defaultTopics)
+  const [selectedSkills, setSelectedSkills] = useState<Record<string, number>>(trainee?.skillsProgress || {})
   const [photoPreview, setPhotoPreview] = useState<string | null>(trainee?.avatar || null)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [selectedTeacher, setSelectedTeacher] = useState<string>(trainee?.assignedCoach || '')
@@ -71,6 +76,29 @@ export function TraineeForm({ isOpen, onClose, onSubmit, trainee, teachers = [] 
       setSelectedTeacher(trainee.assignedCoach || '')
     }
   }, [trainee])
+
+  useEffect(() => {
+    if (selectedTeacher) {
+      const teacher = teachers.find(t => t.id === selectedTeacher)
+      if (teacher) {
+        const newTopics = skillsBySpecialization[teacher.subject] || defaultTopics
+        setCurrentTopics(newTopics)
+        
+        // Initialize skills for new topics if they don't exist
+        setSelectedSkills(prev => {
+          const updated = { ...prev }
+          newTopics.forEach(topic => {
+            if (updated[topic] === undefined) {
+              updated[topic] = 0
+            }
+          })
+          return updated
+        })
+      }
+    } else {
+      setCurrentTopics(defaultTopics)
+    }
+  }, [selectedTeacher, teachers])
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -317,7 +345,7 @@ export function TraineeForm({ isOpen, onClose, onSubmit, trainee, teachers = [] 
           <div className="space-y-4">
             <Label>Skills Progress</Label>
             <div className="grid gap-4 md:grid-cols-2">
-              {topics.map(topic => (
+              {currentTopics.map(topic => (
                 <div key={topic} className="space-y-2">
                   <div className="flex justify-between">
                     <Label htmlFor={topic}>{topic}</Label>

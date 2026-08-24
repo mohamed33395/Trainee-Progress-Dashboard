@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { Trainee, Topic, ReportTask, Evaluation, DailyReport } from '@/types'
+import { Trainee, Topic, ReportTask, Evaluation, DailyReport, Teacher } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,7 +16,20 @@ import { Plus, X, Save } from 'lucide-react'
 import { useLanguage } from '@/context/LanguageContext'
 import { useToast } from '@/components/ui/use-toast'
 
-const topics: Topic[] = ['HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Next.js', 'Git', 'Tailwind CSS']
+const skillsBySpecialization: Record<string, Topic[]> = {
+  'Frontend Development': ['HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Next.js', 'Git', 'Tailwind CSS'],
+  'Backend Development': ['Node.js', 'Python', 'Java', 'SQL', 'MongoDB', 'Express', 'Docker', 'REST APIs', 'PHP', 'Laravel'],
+  'Full Stack Development': ['HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Next.js', 'Node.js', 'Express', 'SQL', 'MongoDB', 'Git', 'Docker', 'PHP', 'Laravel'],
+  'Web Development': ['HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Node.js', 'Express', 'SQL', 'Git', 'PHP', 'Laravel'],
+  'Mobile Development': ['JavaScript', 'TypeScript', 'React Native', 'Flutter', 'Dart', 'Java', 'Swift', 'Git'],
+  'Data Science': ['Python', 'SQL', 'MongoDB', 'Java', 'Git', 'Docker'],
+  'DevOps': ['Docker', 'Git', 'Python', 'Linux', 'AWS', 'CI/CD'],
+  'UI/UX Design': ['HTML', 'CSS', 'Tailwind CSS', 'Figma', 'Adobe XD'],
+  'Project Management': ['Git', 'Agile', 'Scrum', 'Jira'],
+  'Other': ['HTML', 'CSS', 'JavaScript', 'Git'],
+}
+
+const defaultTopics: Topic[] = ['HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Next.js', 'Git', 'Tailwind CSS']
 
 const evaluationCriteria = [
   { name: 'understanding', label: 'Understanding' },
@@ -58,12 +71,15 @@ type ReportFormData = z.infer<typeof reportSchema>
 
 interface DailyReportFormProps {
   trainees: Trainee[]
+  teachers: Teacher[]
   onSaveReport: (report: DailyReport) => void
 }
 
-export function DailyReportForm({ trainees, onSaveReport }: DailyReportFormProps) {
+export function DailyReportForm({ trainees, teachers, onSaveReport }: DailyReportFormProps) {
   const { t } = useLanguage()
   const { toast } = useToast()
+  const [selectedTraineeId, setSelectedTraineeId] = useState<string>('')
+  const [availableTopics, setAvailableTopics] = useState<Topic[]>(defaultTopics)
   const [selectedTopics, setSelectedTopics] = useState<Topic[]>([])
   const [tasks, setTasks] = useState<ReportTask[]>([
     { id: '1', description: '', completed: false },
@@ -136,6 +152,23 @@ export function DailyReportForm({ trainees, onSaveReport }: DailyReportFormProps
     const sum = values.reduce((acc, val) => acc + val, 0)
     return Math.round((sum / (values.length * 10)) * 100)
   }
+
+  // Update available topics based on selected trainee's teacher
+  useEffect(() => {
+    if (selectedTraineeId) {
+      const trainee = trainees.find(t => t.id === selectedTraineeId)
+      if (trainee?.assignedCoach) {
+        const teacher = teachers.find(t => t.id === trainee.assignedCoach)
+        if (teacher) {
+          setAvailableTopics(skillsBySpecialization[teacher.subject] || defaultTopics)
+        }
+      } else {
+        setAvailableTopics(defaultTopics)
+      }
+    } else {
+      setAvailableTopics(defaultTopics)
+    }
+  }, [selectedTraineeId, trainees, teachers])
 
   const onSubmit = (data: ReportFormData) => {
     const report: DailyReport = {
@@ -268,7 +301,7 @@ export function DailyReportForm({ trainees, onSaveReport }: DailyReportFormProps
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {topics.map(topic => (
+              {availableTopics.map(topic => (
                 <Badge
                   key={topic}
                   variant={selectedTopics.includes(topic) ? 'default' : 'outline'}

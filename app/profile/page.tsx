@@ -46,15 +46,32 @@ export default function ProfilePage() {
       if (!user?.id) return
 
       try {
+        // First try to get from settings (for all users)
         const savedImage = await firestoreStorageService.getProfileImage(user.id)
-        setProfileImage(savedImage)
+        if (savedImage) {
+          setProfileImage(savedImage)
+          return
+        }
+
+        // If not found in settings, try to get from trainee/teacher avatar
+        if (user.role === 'trainee' && user.traineeId) {
+          const traineeData = await firestoreStorageService.getTraineeById(user.traineeId)
+          if (traineeData?.avatar) {
+            setProfileImage(traineeData.avatar)
+          }
+        } else if (user.role === 'teacher') {
+          const teacher = teachers.find(t => t.email === user.email || t.name === user.username)
+          if (teacher?.avatar) {
+            setProfileImage(teacher.avatar)
+          }
+        }
       } catch (error) {
         console.error('Error loading profile image:', error)
       }
     }
 
     loadProfileImage()
-  }, [user?.id])
+  }, [user?.id, user?.role, user?.traineeId, user?.email, user?.username, teachers])
 
   const roleLabel = useMemo(() => {
     if (!user) return ''
@@ -85,6 +102,19 @@ export default function ProfilePage() {
 
       try {
         await firestoreStorageService.saveProfileImage(user.id, imageData)
+        
+        // Also update trainee's avatar if user is a trainee
+        if (user.role === 'trainee' && user.traineeId) {
+          await firestoreStorageService.updateTrainee(user.traineeId, { avatar: imageData })
+        }
+        
+        // Also update teacher's avatar if user is a teacher
+        if (user.role === 'teacher') {
+          const teacher = teachers.find(t => t.email === user.email || t.name === user.username)
+          if (teacher) {
+            await firestoreStorageService.updateTeacher(teacher.id, { avatar: imageData })
+          }
+        }
       } catch (error) {
         console.error('Error saving profile image:', error)
         alert('Failed to save profile image. Please try again.')

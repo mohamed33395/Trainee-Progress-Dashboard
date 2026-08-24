@@ -15,6 +15,16 @@ export type Topic =
   | 'Next.js'
   | 'Git'
   | 'Tailwind CSS'
+  | 'Node.js'
+  | 'Python'
+  | 'Java'
+  | 'SQL'
+  | 'MongoDB'
+  | 'Express'
+  | 'Docker'
+  | 'REST APIs'
+  | 'PHP'
+  | 'Laravel'
 
 export type Subject =
   | 'Web Development'
