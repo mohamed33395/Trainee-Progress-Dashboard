@@ -58,10 +58,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const initializeDefaultUsers = async () => {
     const users = useFirestore ? await firestoreStorageService.getUsers() : storageService.getUsers()
+    console.log('Current users in database:', users.length)
+    console.log('User list:', users.map(u => u.username))
     
-    // Only create default users if no users exist at all
-    if (users.length === 0) {
-      // Create default admin user
+    // Always ensure admin user exists
+    const adminExists = users.some(u => u.username === 'admin')
+    if (!adminExists) {
+      console.log('Creating default admin user')
       const adminUser: User = {
         id: 'admin-1',
         username: 'admin',
@@ -75,46 +78,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         storageService.addUser(adminUser)
       }
-
-      // Create default team leader user
-      const teamLeaderUser: User = {
-        id: 'teamleader-1',
-        username: 'teamleader',
-        email: 'teamleader@traineehub.com',
-        password: 'teamleader123',
-        role: 'team_leader',
-        createdAt: new Date().toISOString(),
-      }
-      if (useFirestore) {
-        await firestoreStorageService.addUser(teamLeaderUser)
-      } else {
-        storageService.addUser(teamLeaderUser)
-      }
+      console.log('Admin user created successfully')
     } else {
-      // If users exist, ensure admin user exists (but don't overwrite if it does)
-      const adminExists = users.some(u => u.username === 'admin')
-      if (!adminExists) {
-        const adminUser: User = {
-          id: 'admin-1',
-          username: 'admin',
-          email: 'admin@traineehub.com',
-          password: 'admin123',
-          role: 'admin',
-          createdAt: new Date().toISOString(),
-        }
-        if (useFirestore) {
-          await firestoreStorageService.addUser(adminUser)
-        } else {
-          storageService.addUser(adminUser)
-        }
-      }
+      console.log('Admin user already exists')
     }
   }
 
   const login = async (username: string, password: string): Promise<boolean> => {
     await initializeDefaultUsers()
-    
-    console.log('Attempting login for username:', username)
     
     // Try to find user by username first
     let foundUser = useFirestore 
@@ -123,24 +94,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     // If not found, try by email
     if (!foundUser && username.includes('@')) {
-      console.log('User not found by username, trying by email')
       const allUsers = useFirestore 
         ? await firestoreStorageService.getUsers()
         : storageService.getUsers()
       foundUser = allUsers.find(u => u.email === username)
     }
     
-    console.log('Found user:', foundUser ? foundUser.username : 'null')
-    console.log('Input password:', password)
-    console.log('Stored password:', foundUser?.password)
-    
     if (!foundUser) {
-      console.log('User not found')
       return false
     }
 
     if (foundUser.password !== password) {
-      console.log('Password mismatch')
       return false
     }
 

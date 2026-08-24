@@ -572,10 +572,7 @@ class FirestoreStorageService {
   async getUsers(): Promise<User[]> {
     try {
       const querySnapshot = await getDocs(this.getCollectionRef(this.collections.users))
-      const users = querySnapshot.docs.map(doc => doc.data() as User)
-      console.log('Retrieved users from Firestore:', users.length, 'users')
-      console.log('User usernames:', users.map(u => u.username))
-      return users
+      return querySnapshot.docs.map(doc => doc.data() as User)
     } catch (error) {
       console.error('Error getting users:', error)
       return []
