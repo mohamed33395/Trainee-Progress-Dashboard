@@ -25,6 +25,18 @@ export type Topic =
   | 'REST APIs'
   | 'PHP'
   | 'Laravel'
+  | 'React Native'
+  | 'Flutter'
+  | 'Dart'
+  | 'Swift'
+  | 'Linux'
+  | 'AWS'
+  | 'CI/CD'
+  | 'Figma'
+  | 'Adobe XD'
+  | 'Agile'
+  | 'Scrum'
+  | 'Jira'
 
 export type Subject =
   | 'Web Development'
