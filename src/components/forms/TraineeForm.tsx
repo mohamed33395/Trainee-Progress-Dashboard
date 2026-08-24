@@ -189,6 +189,7 @@ export function TraineeForm({ isOpen, onClose, onSubmit, trainee, teachers = [] 
             <div className="flex items-center gap-4">
               {photoPreview ? (
                 <div className="relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={photoPreview}
                     alt="Preview"
@@ -329,6 +330,7 @@ export function TraineeForm({ isOpen, onClose, onSubmit, trainee, teachers = [] 
                 {teachers.map(teacher => (
                   <SelectItem key={teacher.id} value={teacher.id}>
                     <div className="flex items-center gap-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={teacher.avatar}
                         alt={teacher.name}

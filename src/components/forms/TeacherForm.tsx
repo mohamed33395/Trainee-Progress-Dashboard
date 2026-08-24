@@ -149,6 +149,7 @@ export function TeacherForm({ isOpen, onClose, onSubmit, teacher, trainees = [] 
             <div className="flex items-center gap-4">
               {photoPreview ? (
                 <div className="relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={photoPreview}
                     alt="Preview"
@@ -292,6 +293,7 @@ export function TeacherForm({ isOpen, onClose, onSubmit, teacher, trainees = [] 
                       className="flex-1 cursor-pointer text-sm font-normal"
                     >
                       <div className="flex items-center gap-2">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={trainee.avatar}
                           alt={trainee.name}

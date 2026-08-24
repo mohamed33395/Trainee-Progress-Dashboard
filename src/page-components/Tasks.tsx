@@ -613,7 +613,7 @@ export function Tasks({ currentTraineeId }: TasksProps) {
                         <div className="space-y-2">
                             <Label>{t.tasks.skills}</Label>
                             <div className="flex flex-wrap gap-2">
-                                {Object.keys(trainee?.skillsProgress || {}).map(skill => (
+                                {Object.keys(trainees.find(t => t.id === formData.assignedTraineeId)?.skillsProgress || {}).map(skill => (
                                     <Button
                                         key={skill}
                                         type="button"
