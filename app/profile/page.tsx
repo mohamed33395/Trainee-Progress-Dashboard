@@ -176,8 +176,7 @@ export default function ProfilePage() {
                 <CardContent className="flex flex-col items-center gap-4">
                   <div className="h-32 w-32 rounded-full bg-pink-500 flex items-center justify-center overflow-hidden">
                     {profileImage ? (
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={profileImage} alt="Profile" className="h-full w-full object-cover" />
+                      <img src={profileImage} alt="Profile" className="h-full w-full object-cover" /* eslint-disable-next-line @next/next/no-img-element */ />
                     ) : (
                       <User className="h-16 w-16 text-white" />
                     )}

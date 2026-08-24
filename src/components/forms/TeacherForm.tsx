@@ -149,11 +149,11 @@ export function TeacherForm({ isOpen, onClose, onSubmit, teacher, trainees = [] 
             <div className="flex items-center gap-4">
               {photoPreview ? (
                 <div className="relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={photoPreview}
                     alt="Preview"
                     className="h-20 w-20 rounded-full object-cover border-2 border-border"
+                    /* eslint-disable-next-line @next/next/no-img-element */
                   />
                   <Button
                     type="button"
@@ -293,11 +293,11 @@ export function TeacherForm({ isOpen, onClose, onSubmit, teacher, trainees = [] 
                       className="flex-1 cursor-pointer text-sm font-normal"
                     >
                       <div className="flex items-center gap-2">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={trainee.avatar}
                           alt={trainee.name}
                           className="h-5 w-5 rounded-full"
+                          /* eslint-disable-next-line @next/next/no-img-element */
                         />
                         {trainee.name}
                       </div>

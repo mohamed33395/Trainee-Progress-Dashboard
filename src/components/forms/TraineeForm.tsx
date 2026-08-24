@@ -189,11 +189,11 @@ export function TraineeForm({ isOpen, onClose, onSubmit, trainee, teachers = [] 
             <div className="flex items-center gap-4">
               {photoPreview ? (
                 <div className="relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={photoPreview}
                     alt="Preview"
                     className="h-20 w-20 rounded-full object-cover border-2 border-border"
+                    /* eslint-disable-next-line @next/next/no-img-element */
                   />
                   <Button
                     type="button"

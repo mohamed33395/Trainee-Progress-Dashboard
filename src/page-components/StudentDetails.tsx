@@ -159,11 +159,11 @@ export function StudentDetails({ trainees, reports, teachers }: StudentDetailsPr
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-4 mb-4">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={trainee.avatar}
                     alt={trainee.name}
                     className="h-20 w-20 rounded-full"
+                    /* eslint-disable-next-line @next/next/no-img-element */
                   />
                   <div>
                     <h3 className="text-lg font-semibold">{trainee.name}</h3>

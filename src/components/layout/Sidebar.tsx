@@ -149,8 +149,7 @@ export function Sidebar() {
                                 className="flex h-12 w-12 items-center justify-center rounded-full bg-pink-500 hover:bg-pink-600 transition-colors cursor-pointer overflow-hidden"
                             >
                                 {adminProfileImage ? (
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={adminProfileImage} alt="Profile" className="h-full w-full object-cover"/>
+                                    <img src={adminProfileImage} alt="Profile" className="h-full w-full object-cover" /* eslint-disable-next-line @next/next/no-img-element */ />
                                 ) : (
                                     <User className="h-6 w-6 text-white"/>
                                 )}
@@ -181,8 +180,7 @@ export function Sidebar() {
                                 <div className="flex flex-col items-center gap-4">
                                     <div className="h-32 w-32 rounded-full bg-pink-500 flex items-center justify-center overflow-hidden">
                                         {adminProfileImage ? (
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img src={adminProfileImage} alt="Profile" className="h-full w-full object-cover"/>
+                                            <img src={adminProfileImage} alt="Profile" className="h-full w-full object-cover" /* eslint-disable-next-line @next/next/no-img-element */ />
                                         ) : (
                                             <User className="h-16 w-16 text-white"/>
                                         )}
@@ -325,11 +323,11 @@ export function Sidebar() {
                     <div className="p-4 border-t border-purple-800/30">
                         <div className="flex items-center justify-center">
                             <div className="relative">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
                                     src="/img/logo.png"
                                     className="h-40 w-40  object-contain logo-scale-animation"
                                     alt="NV Logo"
+                                    /* eslint-disable-next-line @next/next/no-img-element */
                                 />
                             </div>
 
