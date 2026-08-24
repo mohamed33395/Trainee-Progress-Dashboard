@@ -88,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await initializeDefaultUsers()
     
     // Try to find user by username first
-    let foundUser = useFirestore 
+    let foundUser: User | null = useFirestore 
       ? await firestoreStorageService.getUserByUsername(username)
       : storageService.getUserByUsername(username)
     
@@ -97,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const allUsers = useFirestore 
         ? await firestoreStorageService.getUsers()
         : storageService.getUsers()
-      foundUser = allUsers.find(u => u.email === username)
+      foundUser = allUsers.find(u => u.email === username) || null
     }
     
     if (!foundUser) {
